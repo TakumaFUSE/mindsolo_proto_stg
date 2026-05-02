@@ -1,11 +1,16 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-const AUTH_ROUTES  = ['/login', '/signup', '/forgot-password', '/terms']
+const AUTH_ROUTES  = ['/login', '/signup', '/forgotpassword', '/terms']
 const PUBLIC_PATHS = ['/', ...AUTH_ROUTES]
 
 export async function proxy(request: NextRequest) {
-  // Allow all requests if Supabase credentials are not configured (local dev without .env.local)
+  // Explicit dev bypass: set NEXT_PUBLIC_DEV_BYPASS_AUTH=true in .env.local
+  if (process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true') {
+    return NextResponse.next({ request })
+  }
+
+  // Implicit bypass: Supabase credentials not configured
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return NextResponse.next({ request })
   }
@@ -13,8 +18,8 @@ export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll() {
@@ -44,7 +49,7 @@ export async function proxy(request: NextRequest) {
   const isPublicPath = PUBLIC_PATHS.some(r => pathname === r)
   const isCronRoute  = pathname.startsWith('/api/cron/')
 
-  // Cron routes are authenticated by CRON_SECRET header, not user session
+  // Cron routes authenticate via CRON_SECRET header, not user session
   if (isCronRoute) return supabaseResponse
 
   // Unauthenticated access to protected route → /login
@@ -54,7 +59,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Authenticated user on auth page → /feed
+  // Authenticated user hitting an auth page → /feed
   if (user && isAuthRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/feed'
