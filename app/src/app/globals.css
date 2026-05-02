@@ -1,1 +1,95 @@
 @import "tailwindcss";
+
+/* ── CSS Custom Properties (mock naming) ──────────────────────── */
+:root {
+  --bg: #f4eee7;
+  --bg-dark: #ebddd0;
+  --surface: #fffdfb;
+  --surface-soft: #fff6ee;
+  --surface-strong: #fff;
+  --ink: #2a241f;
+  --muted: #73675d;
+  --line: #e9d9cc;
+  --line-strong: #d8c1af;
+  --brand: #ea6b3d;
+  --brand-2: #139a90;
+  --brand-soft: #ffe7d7;
+  --good: #15996f;
+  --danger: #b35f3d;
+}
+
+/* ── Tailwind v4 Static Tokens ────────────────────────────────── */
+/* Injected into :root as --shadow-* and --radius-* CSS variables */
+@theme {
+  --shadow-card: 0 10px 26px rgba(70, 42, 18, 0.09);
+  --shadow-device: 0 30px 70px rgba(52, 26, 7, 0.22);
+
+  --radius-xl: 26px;
+  --radius-lg: 18px;
+  --radius-md: 13px;
+  --radius-sm: 10px;
+}
+
+/* ── Tailwind v4 Inline Tokens (reference :root vars) ─────────── */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-dark: var(--bg-dark);
+  --color-surface: var(--surface);
+  --color-surface-soft: var(--surface-soft);
+  --color-surface-strong: var(--surface-strong);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-brand: var(--brand);
+  --color-brand-2: var(--brand-2);
+  --color-brand-soft: var(--brand-soft);
+  --color-good: var(--good);
+  --color-danger: var(--danger);
+
+  --font-sans: var(--font-manrope), "Noto Sans JP", sans-serif;
+}
+
+/* ── Base Styles ──────────────────────────────────────────────── */
+@layer base {
+  html,
+  body {
+    margin: 0;
+    min-height: 100%;
+  }
+
+  body {
+    color: var(--ink);
+    background:
+      radial-gradient(1000px 700px at 0% -25%, #ffd9bd 0%, rgba(255, 217, 189, 0) 70%),
+      radial-gradient(900px 660px at 100% 120%, #c9ede7 0%, rgba(201, 237, 231, 0) 64%),
+      linear-gradient(180deg, var(--bg) 0%, var(--bg-dark) 100%);
+  }
+}
+
+/* ── Orb Decoration ───────────────────────────────────────────── */
+.bg-orb {
+  position: fixed;
+  z-index: -1;
+  filter: blur(86px);
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+.orb-a {
+  top: -90px;
+  left: -60px;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: #f7a069;
+}
+
+.orb-b {
+  right: -90px;
+  bottom: -130px;
+  width: 380px;
+  height: 380px;
+  border-radius: 50%;
+  background: #73d1c7;
+}

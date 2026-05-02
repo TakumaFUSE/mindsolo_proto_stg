@@ -5,6 +5,11 @@ const AUTH_ROUTES  = ['/login', '/signup', '/forgot-password', '/terms']
 const PUBLIC_PATHS = ['/', ...AUTH_ROUTES]
 
 export async function proxy(request: NextRequest) {
+  // Allow all requests if Supabase credentials are not configured (local dev without .env.local)
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return NextResponse.next({ request })
+  }
+
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
