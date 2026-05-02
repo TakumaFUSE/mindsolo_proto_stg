@@ -1091,6 +1091,217 @@ button {
   background: #eafcf8;
 }
 
+/* ===== 検索モーダル ===== */
+.search-open-btn {
+  align-self: flex-start;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: var(--radius-md);
+  padding: 8px 13px;
+  font-size: 0.82rem;
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--muted);
+  transition: all 0.16s ease;
+  white-space: nowrap;
+}
+.search-open-btn:hover {
+  border-color: var(--line-strong);
+  transform: translateY(-1px);
+}
+.search-modal {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  border-radius: inherit;
+  overflow: hidden;
+  align-items: flex-end;
+}
+.search-modal.is-open {
+  display: flex;
+}
+.search-modal-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(42, 36, 31, 0.45);
+}
+.search-modal-panel {
+  position: relative;
+  width: 100%;
+  background: var(--surface);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  padding: 18px 16px 24px;
+  z-index: 1;
+}
+.search-modal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.search-close-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: #fff;
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  color: var(--muted);
+  display: grid;
+  place-items: center;
+}
+.filter-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--muted);
+  margin: 10px 0 6px;
+}
+.filter-chip.is-active,
+.sort-chip.is-active {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-weight: 700;
+}
+
+/* ===== 振り返り提案 既読/未読 ===== */
+.suggestion {
+  cursor: pointer;
+  transition: opacity 0.2s ease, border-color 0.2s ease;
+}
+.suggestion.is-read {
+  border-color: #ddd0c6;
+  background: linear-gradient(145deg, #f5f1ee 0%, #f9f7f5 100%);
+  opacity: 0.6;
+}
+.suggestion-read-mark {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.72rem;
+  color: #9b8f87;
+}
+
+/* ===== forgotpassword 送信完了 ===== */
+.forgot-success {
+  display: none;
+  color: var(--good);
+  font-size: 0.86rem;
+  text-align: center;
+  margin-top: 8px;
+  padding: 8px;
+  background: rgba(21, 153, 111, 0.08);
+  border-radius: var(--radius-sm);
+}
+
+/* ===== mentor_top 編集モード ===== */
+.mentor-card.is-edit-mode {
+  border-color: #f0b8a0;
+  position: relative;
+}
+.mentor-card.is-edit-mode::after {
+  content: "✕";
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+  display: grid;
+  place-items: center;
+  color: #8b7d73;
+  font-size: 0.8rem;
+  pointer-events: none;
+}
+
+/* ===== mentor_add おすすめ候補 ===== */
+.screen-desc {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+
+/* ===== discover_top Likes section-head ===== */
+.section-head-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+/* ===== discover_detail ===== */
+.discover-detail-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.filter-display {
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+.recommend-tag {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.recommend-tag.just-for-you {
+  background: #fff2e6;
+  color: #a05635;
+  border: 1px solid #f0c8a8;
+}
+.recommend-tag.expand {
+  background: #eaf8f5;
+  color: #0d7a70;
+  border: 1px solid #b5e2da;
+}
+.recommend-card-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+.like-btn {
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.82rem;
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--muted);
+  transition: all 0.18s ease;
+}
+.like-btn:hover {
+  border-color: var(--line-strong);
+  transform: translateY(-1px);
+}
+.like-btn.is-liked {
+  background: #fff0ea;
+  border-color: #f0b08a;
+  color: #b05c35;
+  font-weight: 700;
+}
+
+/* ===== setting 利用プラン ===== */
+.plan-badge {
+  display: inline-block;
+  border: 1px solid #d4c5b8;
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #6b5d54;
+  background: #f5ece6;
+}
+
 @media (max-width: 930px) {
   .layout {
     grid-template-columns: 1fr;

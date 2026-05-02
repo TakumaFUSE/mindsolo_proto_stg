@@ -14,7 +14,7 @@
       <aside class="nav-panel">
         <div class="brand">
           <p class="brand-tag">Product Mock</p>
-          <h1>Mindsolo</h1>
+          <h1>editlife</h1>
           <p class="brand-desc">Screen Switcher</p>
         </div>
 
@@ -23,6 +23,7 @@
           <button class="nav-btn is-active" data-screen="login">login</button>
           <button class="nav-btn" data-screen="signup">signup</button>
           <button class="nav-btn" data-screen="forgotpassword">forgotpassword</button>
+          <button class="nav-btn" data-screen="termsofuse">termsofuse</button>
         </div>
 
         <div class="group">
@@ -62,12 +63,42 @@
           <div class="phone-head">
             <div class="title-wrap">
               <p id="screenName">login</p>
-              <span>mindsolo mobile</span>
+              <span>editlife mobile</span>
             </div>
             <button class="head-action" aria-label="profile"></button>
           </div>
 
+          <!-- 検索モーダル (feed専用、.phone直下に配置してoverlay) -->
+          <div class="search-modal" id="searchModal">
+            <div class="search-modal-overlay" id="searchOverlay"></div>
+            <div class="search-modal-panel">
+              <div class="search-modal-head">
+                <span class="section-title">検索・絞り込み</span>
+                <button class="search-close-btn" id="searchCloseBtn">×</button>
+              </div>
+              <label class="input-wrap">
+                <span>フリーワード</span>
+                <input type="text" placeholder="キーワードで検索" />
+              </label>
+              <p class="filter-label">種別</p>
+              <div class="chip-row">
+                <button class="chip filter-chip is-active" data-filter="all">すべて</button>
+                <button class="chip filter-chip" data-filter="entry">エントリ</button>
+                <button class="chip filter-chip" data-filter="thread">スレッド</button>
+              </div>
+              <p class="filter-label">並び替え</p>
+              <div class="chip-row">
+                <button class="chip sort-chip is-active" data-sort="new">新しい順</button>
+                <button class="chip sort-chip" data-sort="old">古い順</button>
+              </div>
+              <button class="primary" style="margin-top:12px">検索</button>
+            </div>
+          </div>
+
           <div class="screen-host">
+
+            <!-- ========== AUTH ========== -->
+
             <article class="screen is-visible" data-name="login">
               <div class="auth-hero">
                 <p class="eyebrow">Reflect Better</p>
@@ -99,7 +130,7 @@
               <button class="text-btn" data-go="forgotpassword">パスワードを忘れた場合</button>
 
               <div class="link-row">
-                <a href="#">利用規約</a>
+                <button class="text-btn slim" data-go="termsofuse">利用規約</button>
                 <a href="#">プライバシーポリシー</a>
               </div>
             </article>
@@ -123,29 +154,43 @@
                 <p>登録メールへ再設定リンクを送信します。</p>
               </div>
               <label class="input-wrap"><span>メールアドレス</span><input type="text" placeholder="you@example.com" /></label>
-              <button class="primary">再設定メールを送信</button>
+              <button class="primary" id="forgotSubmitBtn">再設定メールを送信</button>
+              <p class="forgot-success" id="forgotSuccess">再設定リンクを送信しました。メールをご確認ください。</p>
               <button class="ghost" data-go="login">ログインに戻る</button>
             </article>
+
+            <article class="screen" data-name="termsofuse">
+              <div class="screen-intro">
+                <h2 class="section-title">利用規約</h2>
+              </div>
+              <div class="card">
+                <h3>第1条（適用）</h3>
+                <p>本規約は、editlife（以下「本サービス」）の利用に関する条件を定めるものです。ユーザーの皆さまは本規約に同意の上、本サービスをご利用ください。</p>
+              </div>
+              <div class="card">
+                <h3>第2条（利用登録）</h3>
+                <p>本サービスの利用を希望する方は、本規約に同意した上で、当社の定める方法によって利用登録を申請し、当社がこれを承認することによって利用登録が完了するものとします。</p>
+              </div>
+              <div class="card">
+                <h3>第3条（禁止事項）</h3>
+                <p>ユーザーは、本サービスの利用にあたり、以下の行為をしてはなりません。法令または公序良俗に違反する行為、犯罪行為に関連する行為、その他当社が不適切と判断する行為。</p>
+              </div>
+              <div class="card">
+                <h3>第4条（プライバシー）</h3>
+                <p>当社は、本サービスの利用によって取得する個人情報については、当社プライバシーポリシーに従い適切に取り扱うものとします。</p>
+              </div>
+              <button class="ghost" data-go="login" style="margin-top:12px">ログインに戻る</button>
+            </article>
+
+            <!-- ========== CORE ========== -->
 
             <article class="screen" data-name="feed">
               <div class="feed-welcome">
                 <div>
                   <p class="eyebrow">Daily Reflection</p>
                   <h2>おかえりなさい、Hirokiさん</h2>
-                  <span>今日の記録候補: 3件 / メンター提案: 2件</span>
                 </div>
-                <div class="streak-pill">7 day streak</div>
-              </div>
-
-              <div class="search-row">
-                <input type="text" placeholder="キーワードで検索" />
-                <button>検索</button>
-              </div>
-
-              <div class="chip-row">
-                <button class="chip">感情で絞る</button>
-                <button class="chip">日付順</button>
-                <button class="chip">未読提案</button>
+                <button class="search-open-btn" id="searchOpenBtn" aria-label="検索">検索</button>
               </div>
 
               <div class="section-head">
@@ -153,15 +198,15 @@
                 <a href="#">すべて見る</a>
               </div>
               <div class="rail">
-                <div class="suggestion">
+                <div class="suggestion is-unread">
                   <h4>最近の達成感の源泉</h4>
                   <p>仕事・運動・学習の共通点をAIが抽出しました。</p>
                 </div>
-                <div class="suggestion">
+                <div class="suggestion is-unread">
                   <h4>モヤモヤのトリガー分析</h4>
                   <p>夜の時間帯に思考が重くなる傾向があります。</p>
                 </div>
-                <div class="suggestion">
+                <div class="suggestion is-unread">
                   <h4>次の行動提案</h4>
                   <p>明日の朝に10分だけ散歩メモを試しましょう。</p>
                 </div>
@@ -252,20 +297,6 @@
                     <span class="chain-node"></span>
                     <button class="entry-card" data-go="entry_detail">
                       <div class="entry-top">
-                        <p>エントリ 2026/04/22 08:05</p>
-                        <span class="badge">健康</span>
-                      </div>
-                      <span>朝ランの記録。体調は良好、継続の工夫をメモ。</span>
-                    </button>
-                  </div>
-                  <button class="chain-add chain-add-end" data-go="entry_write" aria-label="new entry">+</button>
-                </div>
-
-                <div class="chain-list">
-                  <div class="chain-item">
-                    <span class="chain-node"></span>
-                    <button class="entry-card" data-go="entry_detail">
-                      <div class="entry-top">
                         <p>エントリ 2026/04/21 23:30</p>
                         <span class="badge">仕事</span>
                       </div>
@@ -280,30 +311,6 @@
                         <span class="badge">学習</span>
                       </div>
                       <span>英語学習30分。聞き取れない箇所を単語帳に追加。</span>
-                    </button>
-                  </div>
-                  <button class="chain-add chain-add-end" data-go="entry_write" aria-label="new entry">+</button>
-                </div>
-
-                <div class="chain-list">
-                  <div class="chain-item">
-                    <span class="chain-node"></span>
-                    <button class="entry-card" data-go="entry_detail">
-                      <div class="entry-top">
-                        <p>エントリ 2026/04/21 07:20</p>
-                        <span class="badge">習慣</span>
-                      </div>
-                      <span>朝の支度ルーティン。準備時間が5分短縮。</span>
-                    </button>
-                  </div>
-                  <div class="chain-item">
-                    <span class="chain-node"></span>
-                    <button class="entry-card" data-go="entry_detail">
-                      <div class="entry-top">
-                        <p>エントリ 2026/04/20 22:00</p>
-                        <span class="badge">旅</span>
-                      </div>
-                      <span>次の旅行候補を整理。行きたい場所を3つ選定。</span>
                     </button>
                   </div>
                   <button class="chain-add chain-add-end" data-go="entry_write" aria-label="new entry">+</button>
@@ -342,14 +349,14 @@
               <div class="card">
                 <h3>気の利く情報</h3>
                 <p>集中の再現性を高めるために、明日の朝に「開始5分で終わるタスク」を1つ事前設定してみましょう。</p>
-                <button class="primary slim" data-go="mentor_thread">メンターに相談する</button>
+                <button class="primary slim" data-go="mentor_top">メンターに相談する</button>
               </div>
             </article>
 
             <article class="screen" data-name="entry_write">
               <div class="split-actions">
-                <button class="ghost">キャンセル</button>
-                <button class="primary slim">保存</button>
+                <button class="ghost" data-go="feed">キャンセル</button>
+                <button class="primary slim" data-go="entry_detail">保存</button>
               </div>
 
               <label class="input-wrap">
@@ -367,7 +374,6 @@
                 <p>その出来事で、あなたが本当に守りたかった価値は何でしたか？</p>
                 <div class="chip-row">
                   <button class="chip" data-action="ask-question">質問をもらう</button>
-                  <button class="chip">DIVE</button>
                 </div>
               </div>
 
@@ -384,20 +390,21 @@
               </div>
             </article>
 
+            <!-- ========== MENTOR ========== -->
+
             <article class="screen" data-name="mentor_top">
               <div class="section-head">
                 <h3>あなたのメンター</h3>
-                <button class="ghost slim">編集</button>
+                <button class="ghost slim" id="mentorEditBtn">編集</button>
               </div>
 
-              <div class="mentor-list">
+              <div class="mentor-list" id="mentorList">
                 <button class="mentor-card" data-go="mentor_thread">
                   <div class="avatar">C</div>
                   <div>
                     <p>Career Mentor</p>
                     <span>意思決定の整理と優先順位づけを支援</span>
                   </div>
-                  <span class="chip mini">online</span>
                 </button>
 
                 <button class="mentor-card" data-go="mentor_thread">
@@ -406,7 +413,6 @@
                     <p>Life Coach</p>
                     <span>感情整理とセルフケアの伴走役</span>
                   </div>
-                  <span class="chip mini">online</span>
                 </button>
 
                 <button class="mentor-card" data-go="mentor_thread">
@@ -415,7 +421,6 @@
                     <p>Art Guide</p>
                     <span>興味拡張のための発見を提案</span>
                   </div>
-                  <span class="chip mini">busy</span>
                 </button>
               </div>
 
@@ -435,7 +440,25 @@
 
               <button class="primary slim" data-go="mentor_thread">このメンターを登録</button>
 
-              <div class="section-head">
+              <div class="section-head" style="margin-top:18px">
+                <h3>あなたにおすすめのメンター候補</h3>
+              </div>
+              <p class="screen-desc">直近のエントリからAIが提案しています。</p>
+
+              <div class="feed-list">
+                <div class="entry-card plain">
+                  <p>内省サポーター</p>
+                  <span>感情の動きや思考パターンを一緒に振り返り、自己理解を深める伴走型メンター。</span>
+                  <button class="primary slim" data-go="mentor_thread">登録して開始</button>
+                </div>
+                <div class="entry-card plain">
+                  <p>行動設計コーチ</p>
+                  <span>「やりたいこと」を具体的な次のアクションへ落とし込む、実践重視型メンター。</span>
+                  <button class="primary slim" data-go="mentor_thread">登録して開始</button>
+                </div>
+              </div>
+
+              <div class="section-head" style="margin-top:18px">
                 <h3>人気のメンター</h3>
                 <a href="#">おすすめ順</a>
               </div>
@@ -461,7 +484,7 @@
                   <p>Career Mentor</p>
                   <span>Thread: 次の四半期の方向性</span>
                 </div>
-                <button class="chip" data-go="feed">過去ログ</button>
+                <button class="chip" data-go="feed">過去</button>
               </div>
 
               <div class="chat-area">
@@ -484,6 +507,8 @@
                 <button class="primary slim">送信</button>
               </div>
             </article>
+
+            <!-- ========== DISCOVER ========== -->
 
             <article class="screen" data-name="discover_top">
               <div class="feed-welcome discover">
@@ -510,10 +535,14 @@
 
               <div class="section-head">
                 <h3>Likes一覧</h3>
-                <a href="#">並び替え</a>
+                <div class="section-head-actions">
+                  <button class="ghost slim">絞る</button>
+                  <button class="ghost slim">並び替え</button>
+                </div>
               </div>
 
               <div class="recommend-card">
+                <span class="recommend-tag just-for-you">あなたにピッタリ</span>
                 <div class="image-mock">item photo</div>
                 <p>最近の記録では「静かな空間」「余韻のある体験」に反応。現代アートの夜間展示が高相性です。</p>
                 <a href="#" class="external">External Websites</a>
@@ -521,38 +550,86 @@
             </article>
 
             <article class="screen" data-name="discover_detail">
-              <div class="split-actions">
-                <button class="ghost slim">関心を広げる</button>
+              <div class="discover-detail-head">
+                <span class="filter-display">体験 › 美術</span>
                 <button class="ghost slim">更新</button>
               </div>
 
               <div class="recommend-card">
-                <h3>候補 1: 夜の美術館イベント</h3>
+                <span class="recommend-tag just-for-you">あなたにピッタリ</span>
+                <h3>夜の美術館イベント</h3>
                 <div class="image-mock">night museum</div>
                 <p>内省と感性の両方を刺激する体験。ひとり時間を大切にしたい今のあなたに適しています。</p>
-                <a href="#" class="external">External Websites</a>
+                <div class="recommend-card-actions">
+                  <button class="like-btn" data-liked="false">♡ Like</button>
+                  <a href="#" class="external">External Websites</a>
+                </div>
               </div>
 
               <div class="recommend-card">
-                <h3>候補 2: 朝の建築散歩ツアー</h3>
+                <span class="recommend-tag expand">関心を広げる</span>
+                <h3>朝の建築散歩ツアー</h3>
                 <div class="image-mock">architecture walk</div>
                 <p>旅行エントリで多かった「空間の発見」に紐づく提案。視点を切り替えたい時に有効です。</p>
-                <a href="#" class="external">External Websites</a>
+                <div class="recommend-card-actions">
+                  <button class="like-btn" data-liked="false">♡ Like</button>
+                  <a href="#" class="external">External Websites</a>
+                </div>
+              </div>
+
+              <div class="recommend-card">
+                <span class="recommend-tag just-for-you">あなたにピッタリ</span>
+                <h3>一人読書カフェ体験</h3>
+                <div class="image-mock">reading cafe</div>
+                <p>内省メモが多い傾向から、静かな環境でじっくり思考できる場所が合っています。</p>
+                <div class="recommend-card-actions">
+                  <button class="like-btn" data-liked="false">♡ Like</button>
+                  <a href="#" class="external">External Websites</a>
+                </div>
+              </div>
+
+              <div class="recommend-card">
+                <span class="recommend-tag expand">関心を広げる</span>
+                <h3>陶芸ワークショップ</h3>
+                <div class="image-mock">pottery</div>
+                <p>デジタルから離れたものづくり体験。手を動かすことで新たな集中の形を発見できます。</p>
+                <div class="recommend-card-actions">
+                  <button class="like-btn" data-liked="false">♡ Like</button>
+                  <a href="#" class="external">External Websites</a>
+                </div>
+              </div>
+
+              <div class="recommend-card">
+                <span class="recommend-tag just-for-you">あなたにピッタリ</span>
+                <h3>早朝ヨガクラス</h3>
+                <div class="image-mock">morning yoga</div>
+                <p>朝の習慣エントリが続いていることから、身体的なルーティンの充実がフィットします。</p>
+                <div class="recommend-card-actions">
+                  <button class="like-btn" data-liked="false">♡ Like</button>
+                  <a href="#" class="external">External Websites</a>
+                </div>
               </div>
             </article>
+
+            <!-- ========== SETTING ========== -->
 
             <article class="screen" data-name="setting">
               <h2 class="section-title">設定</h2>
 
               <div class="card setting-card">
-                <h3>アカウント</h3>
-                <p>hiroki@example.com</p>
+                <h3>アカウント設定</h3>
+                <p style="font-size:0.82rem;color:var(--muted);margin-bottom:8px">hiroki@example.com</p>
+                <div class="setting-row"><span>メールアドレス変更</span><button class="chip mini">変更</button></div>
+                <div class="setting-row"><span>パスワード変更</span><button class="chip mini">変更</button></div>
               </div>
 
               <div class="card setting-card">
-                <h3>通知設定</h3>
-                <div class="setting-row"><span>毎日の振り返りリマインド</span><button class="chip mini">ON</button></div>
-                <div class="setting-row"><span>メンター返信通知</span><button class="chip mini">ON</button></div>
+                <h3>利用プラン</h3>
+                <div class="setting-row">
+                  <span>現在のプラン</span>
+                  <span class="plan-badge">Free</span>
+                </div>
+                <p style="font-size:0.78rem;color:var(--muted);margin-top:8px">Pro プランにアップグレードすると、さらに多くの機能が使えます。</p>
               </div>
 
               <div class="card setting-card">
@@ -561,7 +638,8 @@
                 <div class="setting-row"><span>言語</span><button class="chip mini">日本語</button></div>
               </div>
             </article>
-          </div>
+
+          </div><!-- /screen-host -->
 
           <nav class="bottom-nav">
             <button class="nav-chip" data-screen="feed">feed</button>
