@@ -15,7 +15,8 @@ export default async function FeedPage() {
   let displayName: string
 
   if (DEV_BYPASS) {
-    groups = groupFeedItems(FIXTURE_FEED_ITEMS)
+    const { devNewEntries } = await import('@/lib/dev-store')
+    groups = groupFeedItems([...devNewEntries, ...FIXTURE_FEED_ITEMS])
     suggestions = FIXTURE_SUGGESTIONS
     displayName = 'Hiroki'
   } else {
