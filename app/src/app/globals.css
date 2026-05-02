@@ -92,6 +92,17 @@
   }
 }
 
+/* ── Chain Timeline connector ─────────────────────────────────── */
+.chain-connector {
+  width: 2px;
+  background: linear-gradient(180deg, #e2d0c0 0%, #cfb8a4 100%);
+}
+
+.chain-connector-plain {
+  width: 2px;
+  background: #d2bcaa;
+}
+
 /* ── Orb Decoration ───────────────────────────────────────────── */
 .bg-orb {
   position: fixed;

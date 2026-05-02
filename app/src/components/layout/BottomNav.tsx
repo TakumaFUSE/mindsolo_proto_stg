@@ -8,7 +8,7 @@ type NavItem = { href: string; label: string; isWrite?: boolean }
 const NAV_ITEMS: NavItem[] = [
   { href: '/feed',        label: 'feed' },
   { href: '/mentor',      label: 'mentor' },
-  { href: '/journal/new', label: 'write', isWrite: true },
+  { href: '/entry/write', label: 'write', isWrite: true },
   { href: '/discover',    label: 'discover' },
   { href: '/setting',     label: 'setting' },
 ]
