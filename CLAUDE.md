@@ -2,6 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 現在のフェーズ
+- Phase 5: core-screens (開始 2026-05-02)
+
 ## このリポジトリの方針
 - 旧プロト: `legacy/` 参照のみ（コード流用は人が指示したときだけ）
 - 新モック: `mock/` がビジュアル正典
