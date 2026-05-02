@@ -65,6 +65,31 @@
       radial-gradient(900px 660px at 100% 120%, #c9ede7 0%, rgba(201, 237, 231, 0) 64%),
       linear-gradient(180deg, var(--bg) 0%, var(--bg-dark) 100%);
   }
+
+  input,
+  textarea {
+    width: 100%;
+    font-family: inherit;
+    font-size: 0.94rem;
+    color: var(--ink);
+    border: 1px solid #e8d5c6;
+    border-radius: 13px;
+    padding: 10px 12px;
+    outline: none;
+    background: linear-gradient(180deg, #fff 0%, #fffaf4 100%);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  input:focus,
+  textarea:focus {
+    border-color: #eca37d;
+    box-shadow: 0 0 0 4px rgba(234, 107, 61, 0.15);
+  }
+
+  button {
+    font-family: inherit;
+    cursor: pointer;
+  }
 }
 
 /* ── Orb Decoration ───────────────────────────────────────────── */
