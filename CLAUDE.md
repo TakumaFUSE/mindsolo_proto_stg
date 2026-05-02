@@ -13,89 +13,120 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```
 mindsolo/
-├── legacy/mindsera_proto/   # Next.js app (the main codebase)
-├── mock/                    # Static HTML/CSS/JS UI prototype (reference only)
-└── docs/                    # Wireframes and Japanese design spec PDFs
+├── app/                    # Next.js 16 本体（開発対象）
+├── legacy/mindsera_proto/  # 旧プロト・参照のみ。詳細は docs/LEGACY_NOTES.md
+├── mock/                   # HTML/CSS モック・ビジュアル正典
+├── docs/                   # 設計書・仕様（SPEC.md / DATA_MODEL.md / API_CONTRACTS.md）
+├── supabase/migrations/    # SQL マイグレーション
+└── .claude/commands/       # phase-start / phase-end スラッシュコマンド
 ```
-
-Active development happens in `legacy/mindsera_proto/`. The `mock/` directory is a static prototype for UI/UX reference — it is not served by the Next.js app.
 
 ## Development Commands
 
-Run from `legacy/mindsera_proto/`:
+Run from `app/`:
 
 ```bash
-npm run dev     # Start dev server
-npm run build   # Production build
-npm run lint    # Run ESLint
+npm install     # 依存インストール
+npm run dev     # 開発サーバー起動 (localhost:3000)
+npm run build   # 本番ビルド（型チェック込み）
+npm run lint    # ESLint
 ```
 
 No test suite exists in this project.
 
 ## Environment Variables
 
-Create `legacy/mindsera_proto/.env.local`:
+Create `app/.env.local`:
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 ANTHROPIC_API_KEY=
+CRON_SECRET=
+# true にすると Supabase 認証を全スキップ（ローカル開発時）
+NEXT_PUBLIC_DEV_BYPASS_AUTH=true
 ```
 
 ## Architecture
 
-### Next.js Version Warning
+### App Router 構成
 
-This project uses **Next.js 16** which has breaking changes from earlier versions. Before writing any Next.js-specific code, read the relevant guide in `node_modules/next/dist/docs/`. APIs, conventions, and file structure may differ from training data.
+`app/src/app/` のルートグループ:
+- `(auth)/` — login / signup / forgotpassword（認証不要）
+- `(app)/` — feed / mentor / journal / discover / setting（認証必須）
+- `api/` — Claude API 呼び出しと Cron ジョブのみ。CRUD は Supabase クライアント直接
 
-### App Structure
+### 認証・ミドルウェア
 
-Route groups under `src/app/`:
-- `(auth)/` — login, signup (unauthenticated)
-- `(app)/` — dashboard, journal/new, journal/[id], insights, mentor (requires auth)
-- `api/` — server-side API routes for all AI operations
+`app/src/proxy.ts` が Next.js Middleware として動作:
+- `NEXT_PUBLIC_DEV_BYPASS_AUTH=true` のとき全スキップ（ローカル開発用）
+- Supabase env 未設定時も同様にスキップ
+- 未認証ユーザーを `/login` へリダイレクト
 
-Auth routing is handled by `src/proxy.ts` (Next.js middleware), which redirects unauthenticated users to `/login`.
+### デザイントークン
 
-### State Management
+`app/src/app/globals.css` に `mock/styles.css` と同名の CSS 変数を定義:
+- `:root` に `--bg`, `--ink`, `--brand`, `--brand-2` 等を直定義
+- Tailwind v4 `@theme` で shadow / radius 静的値を登録
+- Tailwind v4 `@theme inline` で color / font を CSS 変数経由で参照（循環参照回避）
+- フォント: `next/font/google` で Manrope + Noto Sans JP をロード → `--font-manrope` → `--font-sans`
 
-`src/lib/store.ts` uses Zustand as the single source of truth for journal entries. The store performs **optimistic local updates then async Supabase writes** — state is updated synchronously, and database writes happen in fire-and-forget async IIFEs. This means UI feels instant but sync errors are only logged to console.
+### Supabase
 
-### AI Integration — Two Different Patterns
+- **Auth**: `@supabase/ssr` で Cookie ベース SSR 認証
+- **Client**: `app/src/lib/supabase/client.ts` (createBrowserClient) / `server.ts` (async createServerClient)
+- **スキーマ**: `supabase/migrations/0001_init.sql`。詳細は `docs/DATA_MODEL.md`
+- **RLS**: 全ユーザーデータテーブルに `auth.uid() = user_id` ポリシー適用
 
-The codebase uses two separate SDK approaches for different purposes:
+### AI Integration
 
-1. **Direct Anthropic SDK** (`@anthropic-ai/sdk`) — used in `/api/analyze` for structured `tool_use` responses with JSON output (emotion analysis)
-2. **Vercel AI SDK** (`ai` + `@ai-sdk/anthropic`) — used in `/api/mentor` for streaming text via `streamText()` with `result.toTextStreamResponse()`
+2種の SDK を用途別に使い分ける:
+1. **Direct Anthropic SDK** (`@anthropic-ai/sdk`) — 構造化 JSON 出力が必要な処理（`tool_use`）
+2. **Vercel AI SDK** (`ai` + `@ai-sdk/anthropic`) — メンターチャットのストリーミング（`streamText()`）
 
-All Claude calls use `claude-haiku-4-5-20251001`. Do not switch models without considering cost implications.
+全 AI ルートで `claude-haiku-4-5-20251001` を使用（コスト効率優先）。
 
-### Mentor Persona System
+### TypeScript パスエイリアス
 
-Four built-in personas are defined in `src/lib/personas.ts` with system prompts in `src/lib/prompts/personas.ts`. Personas are automatically selected based on the dominant Plutchik emotion from the last journal entry (mapping in `getMentorMessage()`). Custom mentors created by users are stored in Supabase's `custom_mentors` table and passed via `customSystemPrompt` in the API request body.
+`@/*` → `./src/*`。相対パス `../` は使わない。
 
-### Supabase Schema Requirements
+### 詳細仕様の参照先
 
-The `journal_entries` table requires additional columns beyond the default scaffold. These migrations must be run manually:
+| ドキュメント | 内容 |
+|------------|------|
+| `docs/SPEC.md` | 画面別仕様・機能仕様・受け入れ条件 |
+| `docs/DATA_MODEL.md` | ER図・テーブル定義・RLS・インデックス |
+| `docs/API_CONTRACTS.md` | 全 API エンドポイントのリクエスト/レスポンス仕様 |
 
-```sql
-ALTER TABLE journal_entries
-  ADD COLUMN IF NOT EXISTS latitude double precision,
-  ADD COLUMN IF NOT EXISTS longitude double precision,
-  ADD COLUMN IF NOT EXISTS location_label text,
-  ADD COLUMN IF NOT EXISTS topics text[],
-  ADD COLUMN IF NOT EXISTS keyword_matrix jsonb;
-```
+---
 
-The `custom_mentors` table must also be created with appropriate RLS policies (see `src/app/(app)/mentor/page.tsx` for the expected schema).
+## Phase Log
 
-### Prompt Engineering
+### Phase 1 (material-import) — 2026-05-02
+- 達成: legacy proto (Next.js 14) / モック HTML / ワイヤーフレーム PDF / 設計書 PDF をリポジトリに取り込み
+- 残課題: モックと設計書で仕様が一致していない箇所が多数
+- 次フェーズへの注意: `legacy/` は参照のみ。実装は `app/` に新規作成する
+- 成果物: `legacy/`, `mock/`, `docs/wireframes/`, `docs/design_spec_pdf/`
 
-All system prompts and tool definitions live in `src/lib/prompts/`. The emotion analysis tool definition (`EMOTION_ANALYSIS_TOOL` in `src/lib/prompts/analyze.ts`) must match the `EmotionAnalysis` interface in `src/lib/types.ts` — changing either without updating the other will break structured output parsing.
+### Phase 2 (spec) — 2026-05-02
+- 達成: SPEC.md 確定（13画面・6機能仕様・受け入れ条件）。モック HTML を SPEC.md §3 に合わせて24箇所修正。Playwright で全画面スクリーンショット + compare.html 生成
+- 残課題: データモデルと API 仕様が未定義
+- 次フェーズへの注意: `docs/SPEC.md` が正典。モックや PDF と矛盾する場合は SPEC.md を優先
+- 成果物: `docs/SPEC.md`, `mock/` (24 fixes), `docs/mock_review/`
 
-### Path Aliases
+### Phase 3 (data-model) — 2026-05-02
+- 達成: DATA_MODEL.md（ER図・テーブル定義・RLS・インデックス戦略）、API_CONTRACTS.md（全エンドポイント定義）、`supabase/migrations/0001_init.sql`（初期スキーマ）確定。フェーズ自動化コマンド追加
+- 残課題: Supabase プロジェクト未作成。ローカル dev は DEV_BYPASS_AUTH で認証をスキップ
+- 次フェーズへの注意: CRUD は Supabase クライアント直接。Claude API 呼び出しのみ API Route 経由
+- 成果物: `docs/DATA_MODEL.md`, `docs/API_CONTRACTS.md`, `supabase/migrations/0001_init.sql`, `.claude/commands/`
 
-TypeScript path alias `@/*` maps to `./src/*`. Always use `@/` imports, never relative `../` traversal.
+### Phase 4 (auth-scaffold) — 2026-05-02
+- 達成: Next.js 16 `app/` スキャフォールド完了。Tailwind v4 `@theme` でデザイントークン定義（mock/styles.css 準拠）。`(auth)` / `(app)` ルートグループ作成。login/signup/forgotpassword UI 実装。BottomNav（5アイテム、write ボタン凸状）付き (app) レイアウト実装
+- 残課題: Supabase 実認証未接続（DEV_BYPASS_AUTH で迂回中）。feed/mentor/journal 等は placeholder のみ
+- 次フェーズへの注意: `app/.env.local` に `NEXT_PUBLIC_DEV_BYPASS_AUTH=true` が必須。実認証実装時は proxy.ts を修正する
+- 成果物: `app/src/app/globals.css`, `app/src/proxy.ts`, `app/src/app/(auth)/`, `app/src/app/(app)/`, `app/src/components/layout/BottomNav.tsx`
+
+---
 
 ## フェーズ運用ルール
 - 各フェーズ開始時は /phase-start <番号> <スラッグ> を実行
