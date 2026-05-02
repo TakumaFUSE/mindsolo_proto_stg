@@ -163,7 +163,7 @@ AI が解釈する
 2. `entries` テーブルに INSERT（`ai_status: 'pending'`）
 3. `chain_id` があればその Chain に追加、なければ新 Chain を作成してから INSERT
 4. 本文と深掘りメモを連結して `content` に保存
-5. entry_detail へ遷移
+5. `POST /api/entries` のレスポンスから `id` を取得し `/entry/{id}` へ遷移（feed ではなく entry_detail）
 6. バックグラウンドで `/api/entries/[id]/process` を非同期呼び出し（AI処理起動）
 
 ---
@@ -187,9 +187,12 @@ AI が解釈する
 - mentor_top へ遷移し、どのメンターに相談するか選ばせる（または直接 mentor_thread へ）
 
 **AI生成コンテンツのロード状態:**
-- `ai_status = 'pending' | 'processing'` のときは各セクションをスケルトン表示
-- Supabase Realtime でエントリの `ai_status` を購読し、`done` 変化時に自動リフレッシュ
-- `ai_status = 'error'` のときは「生成に失敗しました」と「再試行」ボタンを表示
+- entry_write 保存直後は `ai_status: 'pending'`、AI フィールドはすべて `null` → 各セクションがスケルトン表示
+  - BodySection: `summary` が null のときサマリボックスをスケルトン表示。本文テキストは即時表示
+  - InterpretationSection: `interpretation` が null のときスケルトン表示。関連エントリリンクは空なら非表示
+  - InsightSection: `helpful_info` が null のときスケルトン表示。「詳細」ボタンは非活性
+- Phase 7 で Supabase Realtime を組み込み、`ai_status` が `done` に変化した時点でスケルトン → 実データに自動差し替え
+- `ai_status = 'error'` のときは「生成に失敗しました」と「再試行」ボタンを表示（Phase 7 実装）
 
 ---
 
