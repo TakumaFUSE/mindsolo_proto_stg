@@ -1,9 +1,8 @@
 import Link from 'next/link'
+import Skeleton from './Skeleton'
 import type { EntryDetail } from '@/lib/entry'
 
 type Props = { entry: EntryDetail }
-
-const isPending = (s: string) => s === 'pending' || s === 'processing'
 
 function fmtDate(iso: string) {
   return iso.slice(0, 16).replace('T', ' ').replace(/-/g, '/')
@@ -14,17 +13,13 @@ export default function InterpretationSection({ entry }: Props) {
     <div className="mb-2 rounded-[18px] border border-[#e9d9cc] bg-white p-3 shadow-[0_10px_26px_rgba(70,42,18,0.09)]">
       <h3 className="mb-2 text-[0.92rem] font-extrabold text-ink">解釈</h3>
 
-      {isPending(entry.ai_status) ? (
-        <div className="space-y-1.5">
-          <div className="h-2.5 w-full animate-pulse rounded bg-[#e9d9cc]" />
-          <div className="h-2.5 w-4/5 animate-pulse rounded bg-[#e9d9cc]" />
-          <div className="h-2.5 w-3/5 animate-pulse rounded bg-[#e9d9cc]" />
-        </div>
-      ) : entry.interpretation ? (
+      {!entry.interpretation ? (
+        <Skeleton rows={3} color="#e9d9cc" />
+      ) : (
         <p className="mb-3 text-[0.84rem] leading-relaxed text-[#5d5048]">
           {entry.interpretation}
         </p>
-      ) : null}
+      )}
 
       {entry.related_entries.length > 0 && (
         <div className="mt-2 flex flex-col gap-1.5">
