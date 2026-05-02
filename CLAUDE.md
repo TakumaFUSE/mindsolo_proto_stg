@@ -96,3 +96,9 @@ All system prompts and tool definitions live in `src/lib/prompts/`. The emotion 
 ### Path Aliases
 
 TypeScript path alias `@/*` maps to `./src/*`. Always use `@/` imports, never relative `../` traversal.
+
+## フェーズ運用ルール
+- 各フェーズ開始時は /phase-start <番号> <スラッグ> を実行
+- 各フェーズ終了時は /phase-end "<一行要約>" を実行
+- 手動でブランチを切ったり、CLAUDE.md にフェーズログを書き込んだりしない
+- これらの slash command は .claude/commands/ に定義済み
