@@ -23,6 +23,13 @@ export default async function EntryDetailPage({
 
   if (DEV_BYPASS) {
     entry = FIXTURE_ENTRY_DETAILS.find(e => e.id === id) ?? null
+    if (!entry) {
+      const { devNewEntries } = await import('@/lib/dev-store')
+      const found = devNewEntries.find(e => e.id === id)
+      if (found && found.kind === 'entry') {
+        entry = { ...found, related_entries: [], chain_thread_id: null }
+      }
+    }
   } else {
     const supabase = await createClient()
     entry = await getEntryDetail(supabase, id)

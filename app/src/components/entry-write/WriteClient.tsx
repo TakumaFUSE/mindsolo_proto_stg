@@ -16,10 +16,12 @@ export default function WriteClient({ initialChainId }: Props) {
   const [images, setImages] = useState<File[]>([])
   const [isPromptOpen, setIsPromptOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   async function handleSave() {
     if (!content.trim() || isSaving) return
     setIsSaving(true)
+    setSaveError(null)
     try {
       const body = new FormData()
       body.append(
@@ -29,10 +31,12 @@ export default function WriteClient({ initialChainId }: Props) {
       if (initialChainId) body.append('chain_id', initialChainId)
       images.forEach(img => body.append('images', img))
 
-      await fetch('/api/entries', { method: 'POST', body })
-      router.push('/feed')
-      router.refresh()
-    } finally {
+      const res = await fetch('/api/entries', { method: 'POST', body })
+      if (!res.ok) throw new Error('保存に失敗しました')
+      const { id } = await res.json()
+      router.push(`/entry/${id}`)
+    } catch {
+      setSaveError('保存に失敗しました。もう一度お試しください。')
       setIsSaving(false)
     }
   }
@@ -57,6 +61,10 @@ export default function WriteClient({ initialChainId }: Props) {
           {isSaving ? '保存中...' : '保存'}
         </button>
       </div>
+
+      {saveError && (
+        <p className="mb-2 text-[0.82rem] text-red-500">{saveError}</p>
+      )}
 
       {/* Main textarea */}
       <Editor value={content} onChange={setContent} />
