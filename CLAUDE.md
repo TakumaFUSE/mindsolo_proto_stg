@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## 現在のフェーズ
-- Phase 7: wiring (開始 2026-05-03)
+- (次のフェーズ未開始)
 
 ## このリポジトリの方針
 - 旧プロト: `legacy/` 参照のみ（コード流用は人が指示したときだけ）
@@ -141,6 +141,14 @@ NEXT_PUBLIC_DEV_BYPASS_AUTH=true
 - DEV_BYPASS では rotating mock replies（devMentorMessages を globalThis で共有）。本番は onFinish で mentor_messages と mentor_threads を Supabase に永続化
 - discover 画面: 6カテゴリ（商品/場所/体験/美術/音楽/海外旅行）× 8キュレーションアイテム (48件) のフィクスチャ。CategoryRail / ItemCard / ReasonBlock / AffiliateButton で detail まで実装。Phase 7 で AI 連携予定
 - 成果物: `app/src/lib/personas.ts`, `lib/prompts/mentor.ts`, `lib/discover.ts`, `lib/mocks/mentor-fixtures.ts`, `lib/mocks/discover-fixtures.ts`, `app/src/components/mentor/`, `app/src/components/discover/`, `app/src/app/(app)/mentor/`, `app/src/app/(app)/discover/`, `app/src/app/api/mentor/`, `supabase/migrations/0002_mentor.sql`
+
+### Phase 7: wiring (2026-05-03 完了)
+- Phase 7-1 Setting: プロフィール表示・カスタムメンター管理（編集/削除）・表示設定・ログアウト実装
+- Phase 7-2 Topics/Chain: エントリ保存時に Claude Haiku tool_use でトピック抽出 → 直近30日のトピック重複スコアで chain_id 自動引き継ぎ。`supabase/migrations/0003_topics_chain.sql`
+- Phase 7-3 SSE生成: GET `/api/entries/[id]/generate` SSE エンドポイントで summary/interpretation/insight/related を並列生成・ストリーミング表示。`useEntryGeneration` hook が EventSource を管理
+- Phase 7-4 Discover AI: Claude Haiku tool_use で6カテゴリパーソナライズレコメンド生成。`discover_cache` テーブル (24h TTL) でキャッシュ。discover ページに実エントリ topics チップを表示
+- Phase 7-5 QA: ESLint flat config 追加・エラー 0 確認。全画面 E2E スクリーンショット12枚。MOCK_AUDIT.md 最終更新（重大差分 0 件）。README.md 新規作成
+- 成果物: `app/src/lib/topics.ts`, `lib/chain.ts`, `lib/generate.ts`, `lib/related.ts`, `lib/discover-ai.ts`, `lib/cache/discover-cache.ts`, `lib/prompts/`, `app/src/app/api/entries/`, `app/src/components/entry-detail/`, `docs/mock_review/7-*.png`, `README.md`, `eslint.config.mjs`
 
 ---
 
