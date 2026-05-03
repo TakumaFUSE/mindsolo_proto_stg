@@ -151,3 +151,21 @@ export type MentorThreadView = {
   created_at: string
   updated_at: string
 }
+
+export type CuratedDiscoverItem = {
+  id: string
+  category_key: string
+  title: string
+  description: string
+  reason: string
+  image_url: string
+  affiliate_url: string | null
+  tags: string[]
+}
+
+export type DiscoverCategoryGroup = {
+  key: string
+  label: string
+  emoji: string
+  items: CuratedDiscoverItem[]
+}
