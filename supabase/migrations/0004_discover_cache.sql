@@ -14,6 +14,12 @@ CREATE INDEX IF NOT EXISTS idx_discover_cache_lookup
 
 ALTER TABLE discover_cache ENABLE ROW LEVEL SECURITY;
 
+DO $$ BEGIN
+  DROP POLICY IF EXISTS "Users can read their own discover cache"   ON discover_cache;
+  DROP POLICY IF EXISTS "Users can insert their own discover cache" ON discover_cache;
+  DROP POLICY IF EXISTS "Users can delete their own discover cache" ON discover_cache;
+END $$;
+
 CREATE POLICY "Users can read their own discover cache"
   ON discover_cache FOR SELECT
   USING (auth.uid() = user_id);
