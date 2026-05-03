@@ -1,4 +1,6 @@
 import ProfileCard from '@/components/setting/ProfileCard'
+import CustomMentorList from '@/components/setting/CustomMentorList'
+import { getCustomMentors } from '@/lib/mentor'
 
 const DEV_BYPASS =
   process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true' ||
@@ -6,6 +8,7 @@ const DEV_BYPASS =
 
 export default async function SettingPage() {
   let email = 'dev@example.com'
+  let userId = 'dev-user'
 
   if (!DEV_BYPASS) {
     const { createClient } = await import('@/lib/supabase/server')
@@ -14,7 +17,10 @@ export default async function SettingPage() {
       data: { user },
     } = await supabase.auth.getUser()
     email = user?.email ?? ''
+    userId = user?.id ?? ''
   }
+
+  const customMentors = await getCustomMentors(userId)
 
   return (
     <div className="flex flex-col gap-4 px-4 py-4 pb-24">
@@ -43,6 +49,9 @@ export default async function SettingPage() {
           Pro プランにアップグレードすると、さらに多くの機能が使えます。
         </p>
       </div>
+
+      {/* カスタムメンター */}
+      <CustomMentorList initialMentors={customMentors} />
 
       {/* 表示設定 (placeholder) */}
       <div className="rounded-[16px] border border-[#ede3d8] bg-white px-4 py-3">
