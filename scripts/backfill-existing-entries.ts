@@ -1,24 +1,33 @@
 #!/usr/bin/env tsx
 /**
- * Backfill topics and chain_id for existing entries that have neither.
+ * Backfill topics and chain_id for existing entries.
  *
  * Usage:
  *   cd scripts
  *   NEXT_PUBLIC_SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... ANTHROPIC_API_KEY=... \
- *     npx tsx backfill-existing-entries.ts [--dry-run]
+ *     npx tsx backfill-existing-entries.ts [--dry-run] [--chain-only]
  *
  * Flags:
- *   --dry-run   Print what would change without writing to DB
+ *   --dry-run     Print what would change without writing to DB
+ *   --chain-only  Skip topic extraction entirely; use existing topics as-is
+ *                 and only assign chain_id. ANTHROPIC_API_KEY not required.
+ *                 Use this when topics are already populated (e.g. topics_null=0).
+ *
+ * Required env vars:
+ *   NEXT_PUBLIC_SUPABASE_URL      Supabase project URL
+ *   SUPABASE_SERVICE_ROLE_KEY     Service role key (bypasses RLS)
+ *   ANTHROPIC_API_KEY             Required unless --chain-only is set
  *
  * Requires:
- *   npm install -g tsx   (or: npx tsx ...)
+ *   npx tsx backfill-existing-entries.ts
  *   @supabase/supabase-js   @anthropic-ai/sdk
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import Anthropic from '@anthropic-ai/sdk'
 
-const DRY_RUN = process.argv.includes('--dry-run')
+const DRY_RUN    = process.argv.includes('--dry-run')
+const CHAIN_ONLY = process.argv.includes('--chain-only')
 const BATCH_SIZE = 50
 const PARALLEL = 3
 const TOPIC_OVERLAP_THRESHOLD = 2
@@ -26,16 +35,24 @@ const LOOKBACK_DAYS = 30
 
 // ── Env validation ─────────────────────────────────────────────────────────
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
-const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY
+const SUPABASE_URL  = process.env.NEXT_PUBLIC_SUPABASE_URL
+const SERVICE_KEY   = process.env.SUPABASE_SERVICE_ROLE_KEY
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY
 
-if (!SUPABASE_URL || !SERVICE_KEY || !ANTHROPIC_KEY) {
+if (!SUPABASE_URL || !SERVICE_KEY) {
   console.error(
     'Missing required env vars:\n' +
     '  NEXT_PUBLIC_SUPABASE_URL\n' +
-    '  SUPABASE_SERVICE_ROLE_KEY\n' +
-    '  ANTHROPIC_API_KEY'
+    '  SUPABASE_SERVICE_ROLE_KEY'
+  )
+  process.exit(1)
+}
+
+if (!CHAIN_ONLY && !ANTHROPIC_KEY) {
+  console.error(
+    'Missing required env var:\n' +
+    '  ANTHROPIC_API_KEY\n' +
+    '(use --chain-only to skip topic extraction and omit this key)'
   )
   process.exit(1)
 }
@@ -43,7 +60,7 @@ if (!SUPABASE_URL || !SERVICE_KEY || !ANTHROPIC_KEY) {
 const supabase: SupabaseClient = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { persistSession: false },
 })
-const anthropic = new Anthropic({ apiKey: ANTHROPIC_KEY })
+const anthropic = ANTHROPIC_KEY ? new Anthropic({ apiKey: ANTHROPIC_KEY }) : null
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -87,7 +104,7 @@ const TOPICS_TOOL = {
 }
 
 async function extractTopics(content: string): Promise<string[]> {
-  if (!content.trim()) return []
+  if (!content.trim() || !anthropic) return []
   const res = await anthropic.messages.create({
     model: 'claude-haiku-4-5-20251001',
     max_tokens: 256,
@@ -162,7 +179,8 @@ async function processEntry(
   cutoff: string,
   stats: { ok: number; skipped: number; failed: number }
 ): Promise<void> {
-  const needsTopics = !entry.topics?.length
+  // In --chain-only mode only assign chain; never touch topics
+  const needsTopics = !CHAIN_ONLY && !entry.topics?.length
   const needsChain  = !entry.chain_id
 
   if (!needsTopics && !needsChain) {
@@ -209,18 +227,25 @@ async function processEntry(
 }
 
 async function main() {
-  console.log(`Backfill starting${DRY_RUN ? ' (DRY RUN)' : ''}…`)
+  const modeLabel = [
+    DRY_RUN    ? 'DRY RUN'    : '',
+    CHAIN_ONLY ? 'CHAIN ONLY' : '',
+  ].filter(Boolean).join(', ')
+  console.log(`Backfill starting${modeLabel ? ` (${modeLabel})` : ''}…`)
 
   let offset = 0
   const stats = { ok: 0, skipped: 0, failed: 0 }
   const cutoff = new Date(Date.now() - LOOKBACK_DAYS * 86_400_000).toISOString()
+
+  // In --chain-only mode fetch only entries missing chain_id (topics already populated)
+  const filterExpr = CHAIN_ONLY ? 'chain_id.is.null' : 'chain_id.is.null,topics.eq.{}'
 
   while (true) {
     const { data: rows, error } = await supabase
       .from('entries')
       .select('id, user_id, content, topics, chain_id, created_at')
       .is('deleted_at', null)
-      .or('chain_id.is.null,topics.eq.{}')
+      .or(filterExpr)
       .order('created_at', { ascending: true })
       .range(offset, offset + BATCH_SIZE - 1)
 
