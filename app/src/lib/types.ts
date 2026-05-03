@@ -126,3 +126,28 @@ export type DiscoverLike = {
 export type FeedItem =
   | ({ kind: 'entry' } & Entry)
   | ({ kind: 'thread' } & MentorThread & { mentor_name: string })
+
+export type CustomMentor = {
+  id: string
+  user_id: string
+  name: string
+  description: string | null
+  system_prompt: string
+  tone: string | null
+  created_at: string
+}
+
+export type MentorThreadView = {
+  id: string
+  user_id: string
+  chain_id: string | null
+  mentor_id: string | null
+  persona_id: string | null
+  is_builtin: boolean
+  mentor_name: string
+  mentor_avatar: string
+  title: string | null
+  last_message: string | null
+  created_at: string
+  updated_at: string
+}
