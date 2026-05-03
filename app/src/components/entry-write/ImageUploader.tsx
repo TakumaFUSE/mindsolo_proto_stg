@@ -56,7 +56,6 @@ const ImageUploader = forwardRef<ImageUploaderHandle, Props>(function ImageUploa
         <div className="mb-3 flex gap-2.5 overflow-x-auto pb-1">
           {files.map((f, i) => (
             <div key={i} className="relative shrink-0">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={URL.createObjectURL(f)}
                 alt=""

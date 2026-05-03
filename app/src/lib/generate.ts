@@ -40,7 +40,7 @@ export async function devGenerateSummary(content: string): Promise<string> {
   return `${content.slice(0, 35).trim()}…という記録。自己観察の一場面として印象的です。`
 }
 
-export async function devGenerateInterpretation(content: string): Promise<string> {
+export async function devGenerateInterpretation(_content: string): Promise<string> {
   await delay(900)
   return `この記録から、あなたが「行動の質」に敏感であることが伝わります。特定の条件が整ったときに集中しやすい傾向があるかもしれません。自分のペースや環境への気づきを大切にしている姿勢が見えます。`
 }

@@ -8,7 +8,6 @@ export default function ImageCarousel({ imageUrls }: Props) {
       style={{ scrollSnapType: 'x mandatory' }}
     >
       {imageUrls.map((url, i) => (
-        // eslint-disable-next-line @next/next/no-img-element
         <img
           key={i}
           src={url}
