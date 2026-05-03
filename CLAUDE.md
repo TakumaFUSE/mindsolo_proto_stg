@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## 現在のフェーズ
-- Phase 6: mentor-discover (開始 2026-05-03)
+- (次のフェーズ未開始)
 
 ## このリポジトリの方針
 - 旧プロト: `legacy/` 参照のみ（コード流用は人が指示したときだけ）
@@ -135,6 +135,12 @@ NEXT_PUBLIC_DEV_BYPASS_AUTH=true
 - entry_write 画面: オートサイズ textarea・画像アップロード・AssistantPromptCard（/api/ask-question ストリーミング）。保存後は /feed ではなく /entry/{id} へ遷移
 - dev bypass: devNewEntries を globalThis に退避し API Route → Server Component 間のバンドルチャンク境界を越えて状態共有
 - 成果物: `app/src/app/(app)/feed/`, `entry/[id]/`, `entry/write/`, `app/src/app/api/ask-question/`, `api/entries/`, `app/src/components/feed/`, `entry-detail/`, `entry-write/`, `app/src/lib/dev-store.ts`
+
+### Phase 6: mentor-discover (2026-05-03 完了)
+- メンター機能: 4種ビルトインペルソナ + カスタムメンター作成、スレッド一覧・チャット画面を実装。AI SDK v6 (useChat + TextStreamChatTransport + streamText) でリアルタイムストリーミング
+- DEV_BYPASS では rotating mock replies（devMentorMessages を globalThis で共有）。本番は onFinish で mentor_messages と mentor_threads を Supabase に永続化
+- discover 画面: 6カテゴリ（商品/場所/体験/美術/音楽/海外旅行）× 8キュレーションアイテム (48件) のフィクスチャ。CategoryRail / ItemCard / ReasonBlock / AffiliateButton で detail まで実装。Phase 7 で AI 連携予定
+- 成果物: `app/src/lib/personas.ts`, `lib/prompts/mentor.ts`, `lib/discover.ts`, `lib/mocks/mentor-fixtures.ts`, `lib/mocks/discover-fixtures.ts`, `app/src/components/mentor/`, `app/src/components/discover/`, `app/src/app/(app)/mentor/`, `app/src/app/(app)/discover/`, `app/src/app/api/mentor/`, `supabase/migrations/0002_mentor.sql`
 
 ---
 
