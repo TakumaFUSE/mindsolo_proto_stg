@@ -1,25 +1,48 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
-export default function MentorAddPage() {
+function MentorAddForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const editId = searchParams.get('id')
+  const isEdit = !!editId
+
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [systemPrompt, setSystemPrompt] = useState('')
   const [tone, setTone] = useState('')
+  const [loading, setLoading] = useState(isEdit)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!editId) return
+    fetch(`/api/mentors/${editId}`)
+      .then(r => r.json())
+      .then(({ mentor }) => {
+        if (mentor) {
+          setName(mentor.name ?? '')
+          setDescription(mentor.description ?? '')
+          setSystemPrompt(mentor.system_prompt ?? '')
+          setTone(mentor.tone ?? '')
+        }
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [editId])
 
   async function handleSave() {
     if (!name.trim() || !systemPrompt.trim() || saving) return
     setSaving(true)
     setError(null)
     try {
-      const res = await fetch('/api/mentors', {
-        method: 'POST',
+      const url = isEdit ? `/api/mentors/${editId}` : '/api/mentors'
+      const method = isEdit ? 'PATCH' : 'POST'
+      const res = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: name.trim(),
@@ -29,25 +52,36 @@ export default function MentorAddPage() {
         }),
       })
       if (!res.ok) throw new Error('保存に失敗しました')
-      router.push('/mentor')
+      router.push(isEdit ? '/setting' : '/mentor')
     } catch {
       setError('保存に失敗しました。もう一度お試しください。')
       setSaving(false)
     }
   }
 
+  if (loading) {
+    return (
+      <div className="flex h-32 items-center justify-center">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#d4956a] border-t-transparent" />
+      </div>
+    )
+  }
+
   return (
     <div className="px-4 pt-4 pb-24">
-      {/* Header */}
       <div className="mb-4 flex items-center gap-3">
-        <Link href="/mentor" className="text-[0.8rem] font-bold text-[#d4956a]">
+        <Link
+          href={isEdit ? '/setting' : '/mentor'}
+          className="text-[0.8rem] font-bold text-[#d4956a]"
+        >
           ←
         </Link>
-        <h2 className="text-[1.05rem] font-extrabold text-ink">カスタムメンターを作成</h2>
+        <h2 className="text-[1.05rem] font-extrabold text-ink">
+          {isEdit ? 'メンターを編集' : 'カスタムメンターを作成'}
+        </h2>
       </div>
 
       <div className="flex flex-col gap-4">
-        {/* Name */}
         <div>
           <label className="mb-1 block text-[0.76rem] font-bold text-[#9b5f41]">
             名前 <span className="text-[#e06b3c]">*</span>
@@ -61,11 +95,8 @@ export default function MentorAddPage() {
           />
         </div>
 
-        {/* Tone */}
         <div>
-          <label className="mb-1 block text-[0.76rem] font-bold text-[#9b5f41]">
-            トーン
-          </label>
+          <label className="mb-1 block text-[0.76rem] font-bold text-[#9b5f41]">トーン</label>
           <input
             type="text"
             value={tone}
@@ -75,11 +106,8 @@ export default function MentorAddPage() {
           />
         </div>
 
-        {/* Description */}
         <div>
-          <label className="mb-1 block text-[0.76rem] font-bold text-[#9b5f41]">
-            説明
-          </label>
+          <label className="mb-1 block text-[0.76rem] font-bold text-[#9b5f41]">説明</label>
           <textarea
             value={description}
             onChange={e => setDescription(e.target.value)}
@@ -89,7 +117,6 @@ export default function MentorAddPage() {
           />
         </div>
 
-        {/* System prompt */}
         <div>
           <label className="mb-1 block text-[0.76rem] font-bold text-[#9b5f41]">
             システムプロンプト <span className="text-[#e06b3c]">*</span>
@@ -103,9 +130,7 @@ export default function MentorAddPage() {
           />
         </div>
 
-        {error && (
-          <p className="text-[0.78rem] text-[#c0392b]">{error}</p>
-        )}
+        {error && <p className="text-[0.78rem] text-[#c0392b]">{error}</p>}
 
         <button
           type="button"
@@ -113,9 +138,23 @@ export default function MentorAddPage() {
           disabled={!name.trim() || !systemPrompt.trim() || saving}
           className="w-full rounded-[16px] bg-[#d4956a] py-3 text-[0.88rem] font-bold text-white transition active:scale-[0.98] disabled:opacity-50"
         >
-          {saving ? '保存中...' : '作成する'}
+          {saving ? '保存中...' : isEdit ? '変更を保存' : '作成する'}
         </button>
       </div>
     </div>
+  )
+}
+
+export default function MentorAddPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-32 items-center justify-center">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#d4956a] border-t-transparent" />
+        </div>
+      }
+    >
+      <MentorAddForm />
+    </Suspense>
   )
 }

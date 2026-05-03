@@ -6,6 +6,38 @@ const DEV_BYPASS =
 
 type Params = Promise<{ id: string }>
 
+export async function GET(_req: Request, { params }: { params: Params }) {
+  const { id } = await params
+
+  if (DEV_BYPASS) {
+    const { devCustomMentors } = await import('@/lib/dev-store')
+    const { FIXTURE_CUSTOM_MENTORS } = await import('@/lib/mocks/mentor-fixtures')
+    const mentor =
+      devCustomMentors.find(m => m.id === id) ??
+      FIXTURE_CUSTOM_MENTORS.find(m => m.id === id) ??
+      null
+    if (!mentor) return NextResponse.json({ error: 'not found' }, { status: 404 })
+    return NextResponse.json({ mentor })
+  }
+
+  const { createClient } = await import('@/lib/supabase/server')
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+
+  const { data, error } = await supabase
+    .from('custom_mentors')
+    .select('*')
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .single()
+
+  if (error || !data) return NextResponse.json({ error: 'not found' }, { status: 404 })
+  return NextResponse.json({ mentor: data })
+}
+
 export async function PATCH(req: Request, { params }: { params: Params }) {
   const { id } = await params
   const { name, description, system_prompt, tone } = (await req.json()) as {
