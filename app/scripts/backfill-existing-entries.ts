@@ -2,10 +2,9 @@
 /**
  * Backfill topics and chain_id for existing entries.
  *
- * Usage:
- *   cd scripts
- *   NEXT_PUBLIC_SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... ANTHROPIC_API_KEY=... \
- *     npx tsx backfill-existing-entries.ts [--dry-run] [--chain-only]
+ * Usage (run from the app/ directory):
+ *   cd app
+ *   npx tsx scripts/backfill-existing-entries.ts [--dry-run] [--chain-only]
  *
  * Flags:
  *   --dry-run     Print what would change without writing to DB
@@ -13,27 +12,38 @@
  *                 and only assign chain_id. ANTHROPIC_API_KEY not required.
  *                 Use this when topics are already populated (e.g. topics_null=0).
  *
- * Required env vars:
- *   NEXT_PUBLIC_SUPABASE_URL      Supabase project URL
- *   SUPABASE_SERVICE_ROLE_KEY     Service role key (bypasses RLS)
- *   ANTHROPIC_API_KEY             Required unless --chain-only is set
+ * Env vars (loaded automatically from app/.env.local):
+ *   NEXT_PUBLIC_SUPABASE_URL   Supabase project URL
+ *   SUPABASE_SERVICE_ROLE_KEY  Service role key (bypasses RLS) — add to .env.local
+ *   ANTHROPIC_API_KEY          Required unless --chain-only is set
  *
- * Requires:
- *   npx tsx backfill-existing-entries.ts
- *   @supabase/supabase-js   @anthropic-ai/sdk
+ * Note: @/lib/chain is not imported here because lib/chain.ts references
+ * next/headers (Server Component context) which is unavailable outside Next.js.
+ * Chain assignment logic is duplicated inline.
  */
 
+// Static imports — only non-app modules here so dotenv runs before app modules
+// are loaded (app modules evaluate module-level const DEV_BYPASS at load time).
+import { resolve } from 'path'
+import { config } from 'dotenv'
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
-import Anthropic from '@anthropic-ai/sdk'
 
 const DRY_RUN    = process.argv.includes('--dry-run')
 const CHAIN_ONLY = process.argv.includes('--chain-only')
 const BATCH_SIZE = 50
-const PARALLEL = 3
+const PARALLEL   = 3
 const TOPIC_OVERLAP_THRESHOLD = 2
 const LOOKBACK_DAYS = 30
 
-// ── Env validation ─────────────────────────────────────────────────────────
+// Load .env.local before validating env vars
+// dotenv does not override already-set env vars (safe to run in CI with explicit vars)
+config({ path: resolve('.env.local') })
+
+// Always use the real API regardless of DEV_BYPASS in .env.local
+// (must be set before @/lib/topics is dynamically imported)
+process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH = 'false'
+
+// ── Env validation ──────────────────────────────────────────────────────────
 
 const SUPABASE_URL  = process.env.NEXT_PUBLIC_SUPABASE_URL
 const SERVICE_KEY   = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -42,8 +52,8 @@ const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY
 if (!SUPABASE_URL || !SERVICE_KEY) {
   console.error(
     'Missing required env vars:\n' +
-    '  NEXT_PUBLIC_SUPABASE_URL\n' +
-    '  SUPABASE_SERVICE_ROLE_KEY'
+    '  NEXT_PUBLIC_SUPABASE_URL    (set in .env.local or environment)\n' +
+    '  SUPABASE_SERVICE_ROLE_KEY   (add to .env.local — never commit this key!)'
   )
   process.exit(1)
 }
@@ -60,9 +70,8 @@ if (!CHAIN_ONLY && !ANTHROPIC_KEY) {
 const supabase: SupabaseClient = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { persistSession: false },
 })
-const anthropic = ANTHROPIC_KEY ? new Anthropic({ apiKey: ANTHROPIC_KEY }) : null
 
-// ── Types ──────────────────────────────────────────────────────────────────
+// ── Types ───────────────────────────────────────────────────────────────────
 
 type EntryRow = {
   id: string
@@ -73,53 +82,16 @@ type EntryRow = {
   created_at: string
 }
 
-// ── Topic extraction ───────────────────────────────────────────────────────
+// ── Topic extraction (delegates to @/lib/topics) ────────────────────────────
 
-const SYSTEM = `あなたはジャーナルエントリからトピックを抽出するアシスタントです。
-ユーザーが記録した文章から、内容を代表するキーワード（トピック）を抽出してください。
-
-【ルール】
-- 3〜6個のトピックを返す
-- 各トピックは日本語の短語（2〜8文字）
-- 固有名詞・行動・感情・テーマを優先
-- 汎用すぎる語（「こと」「もの」「など」）は使わない
-- 日本語のみ出力する`
-
-const TOPICS_TOOL = {
-  name: 'extract_topics',
-  description: 'ジャーナルエントリからトピックキーワードを抽出する',
-  input_schema: {
-    type: 'object' as const,
-    properties: {
-      topics: {
-        type: 'array',
-        items: { type: 'string' },
-        description: '抽出したトピック。3〜6個。日本語短語。',
-        minItems: 3,
-        maxItems: 6,
-      },
-    },
-    required: ['topics'],
-  },
-}
-
+// Dynamic import so @/lib/topics is loaded after env vars and DEV_BYPASS override
+// are in effect. Node.js caches the module after first load.
 async function extractTopics(content: string): Promise<string[]> {
-  if (!content.trim() || !anthropic) return []
-  const res = await anthropic.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 256,
-    system: SYSTEM,
-    tools: [TOPICS_TOOL],
-    tool_choice: { type: 'tool', name: 'extract_topics' },
-    messages: [{ role: 'user', content }],
-  })
-  const block = res.content.find(b => b.type === 'tool_use')
-  if (!block || block.type !== 'tool_use') return []
-  const input = block.input as { topics?: string[] }
-  return Array.isArray(input.topics) ? input.topics : []
+  const { extractTopics: _extract } = await import('@/lib/topics')
+  return _extract(content)
 }
 
-// ── Chain assignment ───────────────────────────────────────────────────────
+// ── Chain assignment (inline — lib/chain.ts uses next/headers) ──────────────
 
 function overlappingTopics(a: string[], b: string[]): number {
   const setA = new Set(a)
@@ -132,7 +104,6 @@ async function assignChain(
   cutoff: string
 ): Promise<string> {
   if (!newTopics.length) {
-    // No topics → create a new chain
     const { data, error } = await supabase
       .from('chains')
       .insert({ user_id: userId })
@@ -162,7 +133,6 @@ async function assignChain(
     }
   }
 
-  // No matching chain → create new one
   const { data, error } = await supabase
     .from('chains')
     .insert({ user_id: userId })
@@ -172,14 +142,13 @@ async function assignChain(
   return data.id
 }
 
-// ── Main ───────────────────────────────────────────────────────────────────
+// ── Main ────────────────────────────────────────────────────────────────────
 
 async function processEntry(
   entry: EntryRow,
   cutoff: string,
   stats: { ok: number; skipped: number; failed: number }
 ): Promise<void> {
-  // In --chain-only mode only assign chain; never touch topics
   const needsTopics = !CHAIN_ONLY && !entry.topics?.length
   const needsChain  = !entry.chain_id
 
@@ -207,9 +176,9 @@ async function processEntry(
       return
     }
 
-    const patch: Partial<EntryRow> & { topics?: string[]; chain_id?: string } = {}
-    if (needsTopics) patch.topics = topics
-    if (needsChain)  patch.chain_id = chainId ?? undefined
+    const patch: Record<string, unknown> = {}
+    if (needsTopics) patch.topics   = topics
+    if (needsChain)  patch.chain_id = chainId
 
     const { error } = await supabase
       .from('entries')
@@ -234,10 +203,9 @@ async function main() {
   console.log(`Backfill starting${modeLabel ? ` (${modeLabel})` : ''}…`)
 
   let offset = 0
-  const stats = { ok: 0, skipped: 0, failed: 0 }
+  const stats  = { ok: 0, skipped: 0, failed: 0 }
   const cutoff = new Date(Date.now() - LOOKBACK_DAYS * 86_400_000).toISOString()
 
-  // In --chain-only mode fetch only entries missing chain_id (topics already populated)
   const filterExpr = CHAIN_ONLY ? 'chain_id.is.null' : 'chain_id.is.null,topics.eq.{}'
 
   while (true) {
@@ -259,7 +227,6 @@ async function main() {
 
     console.log(`\nBatch offset=${offset} size=${entries.length}`)
 
-    // Process in parallel groups of PARALLEL
     for (let i = 0; i < entries.length; i += PARALLEL) {
       const chunk = entries.slice(i, i + PARALLEL)
       await Promise.all(chunk.map(e => processEntry(e, cutoff, stats)))

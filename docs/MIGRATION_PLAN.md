@@ -95,14 +95,16 @@ The expected order is:
 After `supabase db push` completes, run the backfill script to populate `topics` and `chain_id` on pre-existing entries:
 
 ```bash
-cd scripts
-NEXT_PUBLIC_SUPABASE_URL=https://<ref>.supabase.co \
-SUPABASE_SERVICE_ROLE_KEY=<service-role-key> \
-ANTHROPIC_API_KEY=<key> \
-npx tsx backfill-existing-entries.ts
+# Add SUPABASE_SERVICE_ROLE_KEY to app/.env.local (do not commit!)
+# echo "SUPABASE_SERVICE_ROLE_KEY=<service-role-key>" >> app/.env.local
 
-# Dry-run first to preview changes:
-npx tsx backfill-existing-entries.ts --dry-run
+cd app
+
+# Dry-run first to preview changes (topics already populated → --chain-only):
+npx tsx scripts/backfill-existing-entries.ts --chain-only --dry-run
+
+# Run for real:
+npx tsx scripts/backfill-existing-entries.ts --chain-only
 ```
 
 The script:
