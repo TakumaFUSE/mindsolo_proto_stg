@@ -2,11 +2,7 @@ import { notFound } from 'next/navigation'
 import { FIXTURE_ENTRY_DETAILS } from '@/lib/mocks/entry-fixtures'
 import { getEntryDetail } from '@/lib/entry'
 import { createClient } from '@/lib/supabase/server'
-import HeaderMeta from '@/components/entry-detail/HeaderMeta'
-import ImageCarousel from '@/components/entry-detail/ImageCarousel'
-import BodySection from '@/components/entry-detail/BodySection'
-import InterpretationSection from '@/components/entry-detail/InterpretationSection'
-import InsightSection from '@/components/entry-detail/InsightSection'
+import EntryDetailClient from '@/components/entry-detail/EntryDetailClient'
 import type { EntryDetail } from '@/lib/entry'
 
 const DEV_BYPASS =
@@ -37,13 +33,5 @@ export default async function EntryDetailPage({
 
   if (!entry) notFound()
 
-  return (
-    <div className="px-4 pt-4 pb-6">
-      <HeaderMeta entry={entry} />
-      <ImageCarousel imageUrls={entry.image_urls} />
-      <BodySection entry={entry} />
-      <InterpretationSection entry={entry} />
-      <InsightSection entry={entry} />
-    </div>
-  )
+  return <EntryDetailClient entry={entry} />
 }
