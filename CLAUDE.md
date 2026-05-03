@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## 現在のフェーズ
-- Phase 5: core-screens (開始 2026-05-02)
+- (次のフェーズ未開始)
 
 ## このリポジトリの方針
 - 旧プロト: `legacy/` 参照のみ（コード流用は人が指示したときだけ）
@@ -128,6 +128,13 @@ NEXT_PUBLIC_DEV_BYPASS_AUTH=true
 - 残課題: Supabase 実認証未接続（DEV_BYPASS_AUTH で迂回中）。feed/mentor/journal 等は placeholder のみ
 - 次フェーズへの注意: `app/.env.local` に `NEXT_PUBLIC_DEV_BYPASS_AUTH=true` が必須。実認証実装時は proxy.ts を修正する
 - 成果物: `app/src/app/globals.css`, `app/src/proxy.ts`, `app/src/app/(auth)/`, `app/src/app/(app)/`, `app/src/components/layout/BottomNav.tsx`
+
+### Phase 5 (core-screens) — 2026-05-03 完了
+- feed 画面: TimelineChain・SuggestionRail・SearchBar を実装。Chain 末尾 `+` で chain_id 引き継ぎ遷移
+- entry_detail 画面: Header / Body / Interpretation / Insight の4セクション。AI フィールドが null のときセクション単位でスケルトン表示（詳細ボタンも非活性）
+- entry_write 画面: オートサイズ textarea・画像アップロード・AssistantPromptCard（/api/ask-question ストリーミング）。保存後は /feed ではなく /entry/{id} へ遷移
+- dev bypass: devNewEntries を globalThis に退避し API Route → Server Component 間のバンドルチャンク境界を越えて状態共有
+- 成果物: `app/src/app/(app)/feed/`, `entry/[id]/`, `entry/write/`, `app/src/app/api/ask-question/`, `api/entries/`, `app/src/components/feed/`, `entry-detail/`, `entry-write/`, `app/src/lib/dev-store.ts`
 
 ---
 
