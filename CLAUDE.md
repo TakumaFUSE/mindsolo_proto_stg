@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## 現在のフェーズ
-- (次のフェーズ未開始)
+- Phase 6: mentor-discover (開始 2026-05-03)
 
 ## このリポジトリの方針
 - 旧プロト: `legacy/` 参照のみ（コード流用は人が指示したときだけ）
