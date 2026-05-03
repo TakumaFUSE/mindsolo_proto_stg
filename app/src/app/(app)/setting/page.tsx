@@ -1,5 +1,6 @@
 import ProfileCard from '@/components/setting/ProfileCard'
 import CustomMentorList from '@/components/setting/CustomMentorList'
+import LogoutButton from '@/components/setting/LogoutButton'
 import { getCustomMentors } from '@/lib/mentor'
 
 const DEV_BYPASS =
@@ -77,6 +78,8 @@ export default async function SettingPage() {
           </div>
         </div>
       </div>
+
+      <LogoutButton />
     </div>
   )
 }
