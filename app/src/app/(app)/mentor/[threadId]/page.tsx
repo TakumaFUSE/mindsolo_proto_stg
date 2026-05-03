@@ -1,98 +1,56 @@
 'use client'
 
 import { useParams } from 'next/navigation'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import { useChat } from '@ai-sdk/react'
+import { TextStreamChatTransport, isTextUIPart } from 'ai'
 import type { MentorThreadView, MentorMessage } from '@/lib/types'
 import MessageBubble from '@/components/mentor/MessageBubble'
+import StreamingBubble from '@/components/mentor/StreamingBubble'
 import ComposerBar from '@/components/mentor/ComposerBar'
 import Link from 'next/link'
 
-type ThreadData = {
-  thread: MentorThreadView
-  messages: MentorMessage[]
-}
-
 export default function MentorThreadPage() {
   const { threadId } = useParams<{ threadId: string }>()
-  const [data, setData] = useState<ThreadData | null>(null)
+  const [thread, setThread] = useState<MentorThreadView | null>(null)
   const [loading, setLoading] = useState(true)
-  const [sending, setSending] = useState(false)
-  const [streamingText, setStreamingText] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
+
+  const transport = useMemo(
+    () =>
+      new TextStreamChatTransport({
+        api: '/api/mentor',
+        body: { thread_id: threadId },
+      }),
+    [threadId],
+  )
+
+  const { messages, sendMessage, status, setMessages, error } = useChat({ transport })
 
   useEffect(() => {
     fetch(`/api/mentor-threads/${threadId}`)
       .then(r => r.json())
-      .then((d: ThreadData) => {
-        setData(d)
-        setLoading(false)
-      })
+      .then(
+        ({ thread: t, messages: hist }: { thread: MentorThreadView; messages: MentorMessage[] }) => {
+          setThread(t)
+          setMessages(
+            hist.map(m => ({
+              id: m.id,
+              role: m.role as 'user' | 'assistant',
+              parts: [{ type: 'text' as const, text: m.content }],
+            })),
+          )
+          setLoading(false)
+        },
+      )
       .catch(() => setLoading(false))
-  }, [threadId])
+  }, [threadId, setMessages])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [data?.messages, streamingText])
+  }, [messages.length, status])
 
-  async function handleSend(text: string) {
-    if (!data || sending) return
-    setSending(true)
-
-    const userMsg: MentorMessage = {
-      id: `local-${Date.now()}`,
-      thread_id: threadId,
-      role: 'user',
-      content: text,
-      image_urls: [],
-      created_at: new Date().toISOString(),
-    }
-    setData(prev => prev ? { ...prev, messages: [...prev.messages, userMsg] } : prev)
-
-    try {
-      const res = await fetch('/api/mentor-chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          thread_id: threadId,
-          content: text,
-          persona_id: data.thread.persona_id,
-          is_builtin: data.thread.is_builtin,
-          mentor_id: data.thread.mentor_id,
-        }),
-      })
-
-      if (!res.ok || !res.body) throw new Error('failed')
-
-      const reader = res.body.getReader()
-      const dec = new TextDecoder()
-      let full = ''
-
-      setStreamingText('')
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        full += dec.decode(value)
-        setStreamingText(full)
-      }
-
-      const assistantMsg: MentorMessage = {
-        id: `local-${Date.now()}-a`,
-        thread_id: threadId,
-        role: 'assistant',
-        content: full,
-        image_urls: [],
-        created_at: new Date().toISOString(),
-      }
-      setData(prev =>
-        prev ? { ...prev, messages: [...prev.messages, assistantMsg] } : prev,
-      )
-      setStreamingText('')
-    } catch {
-      setStreamingText('')
-    } finally {
-      setSending(false)
-    }
-  }
+  const isProcessing = status === 'submitted' || status === 'streaming'
 
   if (loading) {
     return (
@@ -102,7 +60,7 @@ export default function MentorThreadPage() {
     )
   }
 
-  if (!data) {
+  if (!thread) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 pt-16 text-center">
         <p className="text-[0.82rem] text-muted">スレッドが見つかりません</p>
@@ -121,12 +79,12 @@ export default function MentorThreadPage() {
           ←
         </Link>
         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f5d5b8] text-[0.82rem] font-extrabold text-[#9b5f41]">
-          {data.thread.mentor_avatar}
+          {thread.mentor_avatar}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-[0.85rem] font-extrabold text-ink">{data.thread.mentor_name}</p>
-          {data.thread.title && (
-            <p className="truncate text-[0.7rem] text-muted">{data.thread.title}</p>
+          <p className="text-[0.85rem] font-extrabold text-ink">{thread.mentor_name}</p>
+          {thread.title && (
+            <p className="truncate text-[0.7rem] text-muted">{thread.title}</p>
           )}
         </div>
       </div>
@@ -134,22 +92,25 @@ export default function MentorThreadPage() {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-3">
         <div className="flex flex-col gap-3">
-          {data.messages.map(msg => (
-            <MessageBubble key={msg.id} message={msg} />
-          ))}
+          {messages.map((msg, i) => {
+            const text = msg.parts.filter(isTextUIPart).map(p => p.text).join('')
+            const isStreaming =
+              status === 'streaming' && i === messages.length - 1 && msg.role === 'assistant'
 
-          {/* Streaming bubble */}
-          {streamingText && (
-            <div className="flex justify-start">
-              <div className="max-w-[80%] rounded-[16px] rounded-bl-[4px] border border-[#ede3d8] bg-white px-3 py-2 text-[0.82rem] leading-relaxed text-ink">
-                {streamingText}
-                <span className="ml-1 inline-block h-3 w-1 animate-pulse bg-[#d4956a]" />
-              </div>
-            </div>
-          )}
+            if (isStreaming) {
+              return <StreamingBubble key={msg.id} text={text} />
+            }
+            return (
+              <MessageBubble
+                key={msg.id}
+                role={msg.role as 'user' | 'assistant'}
+                text={text}
+              />
+            )
+          })}
 
-          {/* Typing indicator */}
-          {sending && !streamingText && (
+          {/* Thinking dots while waiting for first chunk */}
+          {status === 'submitted' && (
             <div className="flex justify-start">
               <div className="rounded-[16px] rounded-bl-[4px] border border-[#ede3d8] bg-white px-3 py-2">
                 <span className="flex gap-1">
@@ -165,12 +126,19 @@ export default function MentorThreadPage() {
             </div>
           )}
 
+          {/* Error toast */}
+          {error && (
+            <p className="rounded-[12px] bg-[#fff0ee] px-3 py-2 text-center text-[0.74rem] text-[#c0392b]">
+              エラーが発生しました。もう一度お試しください。
+            </p>
+          )}
+
           <div ref={bottomRef} />
         </div>
       </div>
 
       {/* Composer */}
-      <ComposerBar onSend={handleSend} disabled={sending} />
+      <ComposerBar onSend={text => sendMessage({ text })} disabled={isProcessing} />
     </div>
   )
 }
