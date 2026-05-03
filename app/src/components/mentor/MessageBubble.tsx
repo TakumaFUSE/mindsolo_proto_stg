@@ -1,9 +1,7 @@
-import type { MentorMessage } from '@/lib/types'
+type Props = { role: 'user' | 'assistant'; text: string }
 
-type Props = { message: MentorMessage }
-
-export default function MessageBubble({ message }: Props) {
-  const isUser = message.role === 'user'
+export default function MessageBubble({ role, text }: Props) {
+  const isUser = role === 'user'
 
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
@@ -14,7 +12,7 @@ export default function MessageBubble({ message }: Props) {
             : 'rounded-bl-[4px] border border-[#ede3d8] bg-white text-ink'
         }`}
       >
-        {message.content}
+        {text}
       </div>
     </div>
   )
