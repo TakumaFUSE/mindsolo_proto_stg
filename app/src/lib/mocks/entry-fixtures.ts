@@ -16,6 +16,7 @@ export const FIXTURE_ENTRY_DETAILS: EntryDetail[] = [
     ai_status: 'done',
     summary: '今日は作業の立ち上がりが早く、集中が途切れにくかった。',
     tags: ['集中'],
+    topics: ['集中力', '資料作成', '通知オフ', '作業効率'],
     interpretation:
       'あなたは「明確な開始条件」があると行動に移りやすい傾向があります。小タスク化と時間制限の組み合わせが強みです。過去の習慣記録とも共通するパターンが見られます。',
     helpful_info:
@@ -51,6 +52,7 @@ export const FIXTURE_ENTRY_DETAILS: EntryDetail[] = [
     ai_status: 'done',
     summary: '美術館で静謐な体験。内省的な気分になった。',
     tags: ['旅'],
+    topics: ['美術館', '静けさ', '写真', '内省'],
     interpretation:
       '静かな環境に強く反応する傾向が見られます。内省が深まるのは「余白のある空間」にいるときが多いようです。',
     helpful_info:
@@ -79,6 +81,7 @@ export const FIXTURE_ENTRY_DETAILS: EntryDetail[] = [
     ai_status: 'done',
     summary: '朝ルーティンの効果を確認した。',
     tags: ['習慣'],
+    topics: ['朝ルーティン', '習慣化', '開始儀式', '生産性'],
     interpretation:
       '継続的な習慣形成に取り組んでいます。小さな成功体験を積み重ねることが、長期的なルーティン定着につながります。',
     helpful_info:
@@ -107,6 +110,7 @@ export const FIXTURE_ENTRY_DETAILS: EntryDetail[] = [
     ai_status: 'done',
     summary: 'デザイン書から3つの重要論点を抽出した。',
     tags: ['読書'],
+    topics: ['デザイン', '読書メモ', '論点整理', '学習'],
     interpretation:
       '知識を体系的に整理する能力が高いです。論点を抽出する習慣は、今後の意思決定にも役立ちます。',
     helpful_info:

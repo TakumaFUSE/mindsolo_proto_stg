@@ -26,6 +26,7 @@ export type Entry = {
   ai_status: 'pending' | 'processing' | 'done' | 'error'
   summary: string | null
   tags: string[]
+  topics: string[]
   interpretation: string | null
   helpful_info: string | null
   related_entry_ids: string[]
