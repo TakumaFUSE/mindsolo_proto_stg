@@ -3,6 +3,7 @@ import type { EntryDetail } from '@/lib/entry'
 const CHAIN_A = 'aaaaaaaa-0000-0000-0000-000000000001'
 const CHAIN_B = 'bbbbbbbb-0000-0000-0000-000000000002'
 const CHAIN_C = 'cccccccc-0000-0000-0000-000000000003'
+const CHAIN_D = 'dddddddd-0000-0000-0000-000000000004'
 const UID = 'dev-user'
 
 export const FIXTURE_ENTRY_DETAILS: EntryDetail[] = [
@@ -128,6 +129,26 @@ export const FIXTURE_ENTRY_DETAILS: EntryDetail[] = [
         tags: ['習慣'],
       },
     ],
+    chain_thread_id: null,
+  },
+  // entry-006: pending AI state — used to demo the skeleton/streaming screenshot
+  {
+    id: 'entry-006',
+    user_id: UID,
+    chain_id: CHAIN_D,
+    content: 'ミーティング振り返り。合意形成の進め方を改善したい。',
+    image_urls: [],
+    ai_status: 'pending',
+    summary: null,
+    tags: [],
+    topics: [],
+    interpretation: null,
+    helpful_info: null,
+    related_entry_ids: [],
+    deleted_at: null,
+    created_at: '2026-04-21T23:30:00Z',
+    updated_at: '2026-04-21T23:30:00Z',
+    related_entries: [],
     chain_thread_id: null,
   },
 ]
