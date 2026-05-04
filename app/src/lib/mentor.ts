@@ -102,7 +102,18 @@ export async function getThreads(userId: string): Promise<MentorThreadView[]> {
     .order('updated_at', { ascending: false })
 
   if (error) throw error
-  return resolveThreadViews((data ?? []) as RawThread[], supabase)
+
+  try {
+    return await resolveThreadViews((data ?? []) as RawThread[], supabase)
+  } catch (err) {
+    console.error('[getThreads] resolveThreadViews failed, using raw data', err)
+    return (data ?? []).map(t => ({
+      ...t,
+      mentor_name: 'メンター',
+      mentor_avatar: 'M',
+      last_message: null,
+    } as MentorThreadView))
+  }
 }
 
 export async function getThread(threadId: string): Promise<MentorThreadView | null> {
