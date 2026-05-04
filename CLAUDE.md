@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## 現在のフェーズ
-- (次のフェーズ未開始)
+- Phase 8: bug-fix-and-polish (開始 2026-05-04)
 
 ## このリポジトリの方針
 - 旧プロト: `legacy/` 参照のみ（コード流用は人が指示したときだけ）
