@@ -59,6 +59,40 @@ Adds `entries.topics` column (`ADD COLUMN IF NOT EXISTS`) and a covering index.
 
 Creates `discover_cache` table, index, and RLS policies (all idempotent).
 
+### 0005_bug_fixes.sql
+
+Phase 8 bug fixes:
+- `mentor_threads.chain_id` DROP NOT NULL (threads don't need to originate from an entry)
+- `custom_mentors.role` SET DEFAULT 'mentor' + DROP NOT NULL
+- `mentor_threads.mentor_id` FK re-pointed from `user_mentors` → `custom_mentors` ON DELETE SET NULL
+
+### 0006_schema_fixes.sql
+
+- `entries.id` SET DEFAULT `gen_random_uuid()`
+- `custom_mentors.description` DROP NOT NULL
+
+### 0007_db_cleanup.sql
+
+Phase 9-1 DB housekeeping:
+- Rename legacy PK constraint `journal_entries_pkey` → `entries_pkey` (if still present)
+- Drop duplicate index `entries_user_created_topics`
+- Drop redundant RLS policy `"Users can manage their own custom mentors"` on `custom_mentors`
+- Rename `user_mentors` → `user_mentors_legacy_archive`
+
+### 0008_drop_legacy_columns.sql
+
+Phase 9-3: drop unused columns inherited from the legacy proto schema:
+- `entries.art_url`
+- `entries.framework_id`
+
+### 0009_drop_legacy_archives.sql
+
+Phase 9-4: final removal of legacy archive tables (see §5 for pre-drop counts and backup details):
+- `keyword_saves_legacy_archive`
+- `mentor_conversations_legacy_archive`
+- `user_mentors_legacy_archive`
+- `journal_entries_legacy_archive`
+
 ---
 
 ## 3. Running `supabase db push`

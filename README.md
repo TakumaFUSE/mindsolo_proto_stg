@@ -1,6 +1,6 @@
 # editlife (Mindsolo)
 
-> Phase 0–8 complete — production bugs fixed, lint clean, ready for deploy.
+> Phase 9 complete — DB cleanup, Chain spec corrected, legacy tables dropped, lint clean, ready for deploy.
 
 日々の出来事・感情・思考・興味関心を記録し、AI が解釈・接続・振り返り・次の行動提案へつなげる、**自己理解と探索のためのパーソナルストックツール**。
 
@@ -87,6 +87,9 @@ supabase db push
 0004_discover_cache     discover_cache table
 0005_bug_fixes          mentor_threads.chain_id DROP NOT NULL / custom_mentors.role DEFAULT
 0006_schema_fixes       entries.id DEFAULT gen_random_uuid() / description DROP NOT NULL
+0007_db_cleanup         重複インデックス削除 / PK リネーム / user_mentors → legacy_archive
+0008_drop_legacy_columns  entries.art_url / framework_id 削除
+0009_drop_legacy_archives keyword_saves / mentor_conversations / user_mentors legacy_archive DROP
 ```
 
 ---

@@ -198,6 +198,16 @@ Chain はユーザーの明示的操作のみで形成される。詳細は上�
   - 削除: `keyword_saves_legacy_archive`, `mentor_conversations_legacy_archive`, `user_mentors_legacy_archive`, `journal_entries_legacy_archive`
 - 成果物: `supabase/migrations/0009_drop_legacy_archives.sql`, `docs/legacy_archive_final_counts.sql`
 
+### Phase 9 (db-cleanup-and-tuning) — 2026-05-04 完了
+- 達成:
+  - 9-1: DB 軽微掃除 (重複インデックス削除、PK リネーム、custom_mentors ポリシー整理、user_mentors → legacy_archive)
+  - 9-2: Chain 仕様を「明示的アクション継承型」に全面修正（topic-overlap 自動グルーピングを廃止）
+  - 9-3: `entries` の死カラム削除 (art_url, framework_id)
+  - 9-4: _legacy_archive 群の最終 DROP (keyword_saves / mentor_conversations / user_mentors)
+  - lint 0 errors・build clean を確認
+- 残課題: なし（プロト範囲完了）
+- 次: Vercel デプロイ準備
+
 ---
 
 ## Tech Debt
