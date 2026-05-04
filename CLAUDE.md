@@ -142,13 +142,11 @@ NEXT_PUBLIC_DEV_BYPASS_AUTH=true
 - discover 画面: 6カテゴリ（商品/場所/体験/美術/音楽/海外旅行）× 8キュレーションアイテム (48件) のフィクスチャ。CategoryRail / ItemCard / ReasonBlock / AffiliateButton で detail まで実装。Phase 7 で AI 連携予定
 - 成果物: `app/src/lib/personas.ts`, `lib/prompts/mentor.ts`, `lib/discover.ts`, `lib/mocks/mentor-fixtures.ts`, `lib/mocks/discover-fixtures.ts`, `app/src/components/mentor/`, `app/src/components/discover/`, `app/src/app/(app)/mentor/`, `app/src/app/(app)/discover/`, `app/src/app/api/mentor/`, `supabase/migrations/0002_mentor.sql`
 
-### Phase 7: wiring (2026-05-03 完了)
-- Phase 7-1 Setting: プロフィール表示・カスタムメンター管理（編集/削除）・表示設定・ログアウト実装
-- Phase 7-2 Topics/Chain: エントリ保存時に Claude Haiku tool_use でトピック抽出 → 直近30日のトピック重複スコアで chain_id 自動引き継ぎ。`supabase/migrations/0003_topics_chain.sql`
-- Phase 7-3 SSE生成: GET `/api/entries/[id]/generate` SSE エンドポイントで summary/interpretation/insight/related を並列生成・ストリーミング表示。`useEntryGeneration` hook が EventSource を管理
-- Phase 7-4 Discover AI: Claude Haiku tool_use で6カテゴリパーソナライズレコメンド生成。`discover_cache` テーブル (24h TTL) でキャッシュ。discover ページに実エントリ topics チップを表示
-- Phase 7-5 QA: ESLint flat config 追加・エラー 0 確認。全画面 E2E スクリーンショット12枚。MOCK_AUDIT.md 最終更新（重大差分 0 件）。README.md 新規作成
-- 成果物: `app/src/lib/topics.ts`, `lib/chain.ts`, `lib/generate.ts`, `lib/related.ts`, `lib/discover-ai.ts`, `lib/cache/discover-cache.ts`, `lib/prompts/`, `app/src/app/api/entries/`, `app/src/components/entry-detail/`, `docs/mock_review/7-*.png`, `README.md`, `eslint.config.mjs`
+### Phase 7 (wiring) — 2026-05-04
+- 達成: legacy データ移行 (125 件), chain_id 採番 (122/122), AI 生成パイプライン, discover パーソナライズ, setting 画面シェル, login 実認証接続
+- 未完: 本番モードで複数バグ発覚 (entry/[id] runtime error, entries INSERT 500, mentor 系の参照ミスマッチ等)。lint/build/README は Phase 8 の締め作業に意図的に先送り
+- 次フェーズ: Phase 8 で実データバグ修正と締め (lint/build/README) を実施
+- 成果物: `supabase/migrations/0000-0004`, `app/scripts/backfill-existing-entries.ts`, `docs/MIGRATION_PLAN.md`, `app/src/app/(auth)/login/page.tsx`
 
 ---
 
