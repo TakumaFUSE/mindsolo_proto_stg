@@ -3,6 +3,7 @@ import { PERSONAS } from '@/lib/personas'
 import { getThreads, getCustomMentors } from '@/lib/mentor'
 import PersonaCard from '@/components/mentor/PersonaCard'
 import ThreadCard from '@/components/mentor/ThreadCard'
+import StartConversationButton from '@/components/mentor/StartConversationButton'
 
 const DEV_BYPASS =
   process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true' ||
@@ -87,6 +88,7 @@ export default async function MentorPage() {
                 {m.description && (
                   <p className="mt-1.5 text-[0.74rem] leading-snug text-muted">{m.description}</p>
                 )}
+                <StartConversationButton mentorId={m.id} />
               </div>
             ))}
           </div>
