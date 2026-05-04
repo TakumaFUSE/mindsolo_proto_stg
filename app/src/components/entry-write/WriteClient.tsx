@@ -28,7 +28,7 @@ export default function WriteClient({ initialChainId }: Props) {
         'content',
         deepMemo.trim() ? `${content}\n\n---\n\n${deepMemo}` : content,
       )
-      if (initialChainId) body.append('chain_id', initialChainId)
+      if (initialChainId) body.append('parent_chain_id', initialChainId)
       images.forEach(img => body.append('images', img))
 
       const res = await fetch('/api/entries', { method: 'POST', body })

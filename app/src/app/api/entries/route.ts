@@ -10,14 +10,13 @@ const DEV_BYPASS =
 export async function POST(req: Request) {
   const formData = await req.formData()
   const content = (formData.get('content') as string | null) ?? ''
-  const chainIdParam = formData.get('chain_id') as string | null
+  const parentChainId = formData.get('parent_chain_id') as string | null
 
   if (DEV_BYPASS) {
     const { devNewEntries } = await import('@/lib/dev-store')
 
     const topics = await extractTopics(content)
-    const assigned = await assignChain('dev-user', topics)
-    const chainId = chainIdParam ?? (assigned || randomUUID())
+    const chainId = await assignChain({ userId: 'dev-user', parentChainId })
     const newId = `entry-dev-${Date.now()}`
 
     devNewEntries.unshift({
@@ -51,29 +50,19 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
   const topics = await extractTopics(content)
+  const chainId = await assignChain({ userId: user.id, parentChainId })
 
-  // Determine chain_id: explicit param → topic-overlap match → new chain → null fallback
-  let chainIdToUse: string | null = chainIdParam ?? null
-  if (!chainIdToUse) {
-    const assigned = await assignChain(user.id, topics)
-    if (assigned) {
-      chainIdToUse = assigned
-    } else {
-      const { data: chain, error: chainErr } = await supabase
-        .from('chains')
-        .insert({ user_id: user.id })
-        .select('id')
-        .single()
-      if (chainErr) {
-        console.error('[POST /api/entries] chain insert error', {
-          message: chainErr.message,
-          code: chainErr.code,
-          details: chainErr.details,
-          hint: chainErr.hint,
-        })
-      } else {
-        chainIdToUse = chain.id
-      }
+  // Ensure the chain row exists (INSERT OR IGNORE via upsert)
+  if (!parentChainId) {
+    const { error: chainErr } = await supabase
+      .from('chains')
+      .insert({ id: chainId, user_id: user.id })
+    if (chainErr) {
+      console.error('[POST /api/entries] chain insert error', {
+        message: chainErr.message,
+        code: chainErr.code,
+        details: chainErr.details,
+      })
     }
   }
 
@@ -82,7 +71,7 @@ export async function POST(req: Request) {
     .insert({
       id: randomUUID(),
       user_id: user.id,
-      chain_id: chainIdToUse,
+      chain_id: chainId,
       title: '',
       content,
       word_count: content.length,
@@ -111,7 +100,7 @@ export async function POST(req: Request) {
   await supabase
     .from('chains')
     .update({ updated_at: new Date().toISOString() })
-    .eq('id', chainIdToUse)
+    .eq('id', chainId)
 
   return NextResponse.json({ id: entry.id, chain_id: entry.chain_id, topics: entry.topics })
 }

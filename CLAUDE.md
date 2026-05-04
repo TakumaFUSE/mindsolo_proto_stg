@@ -3,7 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## 現在のフェーズ
-- Phase 8: bug-fix-and-polish (開始 2026-05-04)
+- Phase 9: db-cleanup-and-tuning (開始 2026-05-04)
 
 ## このリポジトリの方針
 - 旧プロト: `legacy/` 参照のみ（コード流用は人が指示したときだけ）
@@ -11,6 +11,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 設計書: `docs/design_spec_pdf/editlife(仮)_設計書.pdf` と `docs/REQUIREMENTS_REVISED.md` が機能正典
 - 実装は最終的に `app/` (Next.js 16, App Router) に作る
 - 各フェーズの成果は `docs/SPEC.md`, `docs/DATA_MODEL.md`, `docs/IMPL_PLAN.md` に蓄積する
+
+## Chain 仕様（重要・自動グルーピングしない）
+
+- Chain は「+」ボタンや「詳細」ボタンなど **ユーザーの明示的アクション** で親 `chain_id` を継承して形成される
+- topics の類似性で自動的に chain にぶら下げる処理は行わない（旧 Phase 7 で実装した `assignChain` は誤実装、Phase 9-2 で訂正済み）
+- 起源なし（BottomNav の「+」から `/entry/write` に直接到達）の場合は `randomUUID()` で新規 `chain_id` を採番
+- chain 内の表示順序は `created_at` 昇順
+- 詳細仕様は `docs/SPEC.md` §3.5・§4.2 の Chain 章を参照
 
 ## Repository Layout
 
@@ -89,6 +97,10 @@ NEXT_PUBLIC_DEV_BYPASS_AUTH=true
 
 全 AI ルートで `claude-haiku-4-5-20251001` を使用（コスト効率優先）。
 
+### Chain 形成ルール
+
+Chain はユーザーの明示的操作のみで形成される。詳細は上の **「## Chain 仕様」** セクションを参照。
+
 ### TypeScript パスエイリアス
 
 `@/*` → `./src/*`。相対パス `../` は使わない。
@@ -158,12 +170,60 @@ NEXT_PUBLIC_DEV_BYPASS_AUTH=true
   - C-4: migration 0005 で `custom_mentors.role` DEFAULT 'mentor' + DROP NOT NULL
   - entries id/description: migration 0006 で `entries.id DEFAULT gen_random_uuid()` + `custom_mentors.description DROP NOT NULL`
 - 加えて: entries/mentors API ルートに構造化エラーロギング追加、lint 0 errors・build clean を確認
-- 残 Tech Debt:
-  - `user_mentors` テーブルはスキーマのみ存在・アプリから未使用（最終整理待ち）
-  - `mentor_conversations_legacy_archive` / `keyword_saves_legacy_archive` は 2 週間後に削除可
-  - entries.chain_id が 3 件 NULL のまま（バックフィル失敗分）
 - 次フェーズ候補: Vercel デプロイ設定 / E2E テスト整備
 - 成果物: `supabase/migrations/0005-0006`, `docs/RUNTIME_BUG_TRIAGE.md`, `docs/MENTOR_AUDIT.md`, `app/src/components/mentor/StartConversationButton.tsx`
+
+### Phase 9-1 — 2026-05-04
+- 達成: migration 0007 適用 (重複インデックス削除、PK 制約リネーム、custom_mentors 重複ポリシー削除、user_mentors → user_mentors_legacy_archive リネーム)
+- 成果物: `supabase/migrations/0007_db_cleanup.sql`, `scripts/audit-user-mentors.sql`
+
+### Phase 9-2 — 2026-05-04
+- 達成: Chain 仕様を「明示的アクション継承型」に全面修正
+  - `lib/chain.ts`: topic-overlap ロジック削除 → `assignChain({ userId, parentChainId? })` に置き換え
+  - `POST /api/entries`: `parent_chain_id` を FormData から受け取る
+  - `POST /api/mentor-threads`: `source_entry_id` 対応（エントリの chain を引き継ぐ）
+  - ChainAddButton: `?chain_id=` → `?parent_chain_id=`
+  - InsightSection: `use client` 化、スレッド未作成時は `source_entry_id` で POST してから遷移
+  - `docs/SPEC.md` §3.5・§4.2 を正規仕様に更新
+- 成果物: `app/src/lib/chain.ts`, `app/src/app/api/entries/route.ts`, `app/src/app/api/mentor-threads/route.ts`, `app/src/components/feed/ChainAddButton.tsx`, `app/src/components/entry-detail/InsightSection.tsx`
+
+### Phase 9-3 — 2026-05-04
+- 達成: `entries` の死カラム削除 (`art_url`, `framework_id`) — migration 0008 適用
+- 成果物: `supabase/migrations/0008_drop_legacy_columns.sql`
+
+### Phase 9-4 — 2026-05-04
+- 達成: legacy archive テーブル群の最終 DROP — migration 0009 適用
+  - バックアップ: `.backups/legacy_archives_20260504_211022.sql` (61 KB)
+  - 件数確認 SQL: `docs/legacy_archive_final_counts.sql`
+  - 削除: `keyword_saves_legacy_archive`, `mentor_conversations_legacy_archive`, `user_mentors_legacy_archive`, `journal_entries_legacy_archive`
+- 成果物: `supabase/migrations/0009_drop_legacy_archives.sql`, `docs/legacy_archive_final_counts.sql`
+
+### Phase 9 (db-cleanup-and-tuning) — 2026-05-04 完了
+- 達成:
+  - 9-1: DB 軽微掃除 (重複インデックス削除、PK リネーム、custom_mentors ポリシー整理、user_mentors → legacy_archive)
+  - 9-2: Chain 仕様を「明示的アクション継承型」に全面修正（topic-overlap 自動グルーピングを廃止）
+  - 9-3: `entries` の死カラム削除 (art_url, framework_id)
+  - 9-4: _legacy_archive 群の最終 DROP (keyword_saves / mentor_conversations / user_mentors)
+  - lint 0 errors・build clean を確認
+- 残課題: なし（プロト範囲完了）
+- 次: Vercel デプロイ準備
+
+---
+
+## Tech Debt
+
+### 対応済み (Phase 9)
+- ✓ DB 軽微掃除 (0007): 重複インデックス削除、PK 制約リネーム、custom_mentors 重複ポリシー削除
+- ✓ user_mentors 廃止 → user_mentors_legacy_archive にリネーム (0007)
+- ✓ Chain 仕様を「明示的アクション継承型」に修正 (Phase 9-2)
+- ✓ entries の死カラム削除: art_url, framework_id (0008)
+- ✓ _legacy_archive 系テーブルの最終 DROP (0009): keyword_saves / mentor_conversations / user_mentors / journal_entries
+
+### 未対応 (継続)
+- backfill script の OFFSET ページングバグ: chain ロジック刷新後は当面触る機会なし。再利用時に修正
+- `/feed` 検索・絞り込み・並び替えの実装 (UI のみ確定済み)
+- `reflection_suggestions` 生成ロジックの実装
+- `/setting` メアド・パスワード変更ボタンの実装
 
 ---
 
