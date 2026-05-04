@@ -119,7 +119,7 @@ AI が解釈する
 - アイテム種別:
   - Entry カード: 日時・タグ（`tags[0]`）・サマリ表示。押下 → entry_detail
   - Thread カード: 破線スタイル。日時・メンター名表示。押下 → mentor_thread
-- Chain 末尾に `+` ボタン → entry_write（`chain_id` をクエリパラメータで渡す）
+- Chain 末尾に `+` ボタン → entry_write（`parent_chain_id` をクエリパラメータで渡す）
 
 #### 検索（モーダル）
 - 検索ボタン押下でモーダル起動
@@ -161,7 +161,7 @@ AI が解釈する
 **保存処理:**
 1. 画像を Supabase Storage にアップロード（未アップロード分）
 2. `entries` テーブルに INSERT（`ai_status: 'pending'`）
-3. `chain_id` があればその Chain に追加、なければ新 Chain を作成してから INSERT
+3. `parent_chain_id` があればその Chain に追加（引き継ぎ）、なければ新 Chain を UUID で生成してから INSERT
 4. 本文と深掘りメモを連結して `content` に保存
 5. `POST /api/entries` のレスポンスから `id` を取得し `/entry/{id}` へ遷移（feed ではなく entry_detail）
 6. バックグラウンドで `/api/entries/[id]/process` を非同期呼び出し（AI処理起動）
@@ -182,9 +182,9 @@ AI が解釈する
 | 解釈 | AI生成テキスト + 関連エントリリンク（最大2件）→ 各 entry_detail へ |
 | 気の利く情報 | AI生成テキスト + 「メンターに相談する」ボタン |
 
-**「メンターに相談する」ボタン:**
-- このエントリと同 Chain に新規 Thread を作成
-- mentor_top へ遷移し、どのメンターに相談するか選ばせる（または直接 mentor_thread へ）
+**「詳細」ボタン（InsightSection）:**
+- `chain_thread_id` が既存 → その Thread へ直接遷移
+- `chain_thread_id` が null → `POST /api/mentor-threads` に `source_entry_id` を送信し、エントリと同 Chain に Thread を生成してから遷移
 
 **AI生成コンテンツのロード状態:**
 - entry_write 保存直後は `ai_status: 'pending'`、AI フィールドはすべて `null` → 各セクションがスケルトン表示
