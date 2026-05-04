@@ -15,7 +15,6 @@ export async function POST(req: Request) {
   if (DEV_BYPASS) {
     const { devNewEntries } = await import('@/lib/dev-store')
 
-    // Extract topics, then determine chain_id
     const topics = await extractTopics(content)
     const assigned = await assignChain('dev-user', topics)
     const chainId = chainIdParam ?? (assigned || randomUUID())
@@ -51,48 +50,64 @@ export async function POST(req: Request) {
 
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
-  // Extract topics synchronously before insert
   const topics = await extractTopics(content)
 
-  // Determine chain_id: explicit param → topic-overlap match → new chain
-  let chainIdToUse: string
-  if (chainIdParam) {
-    chainIdToUse = chainIdParam
-  } else {
+  // Determine chain_id: explicit param → topic-overlap match → new chain → null fallback
+  let chainIdToUse: string | null = chainIdParam ?? null
+  if (!chainIdToUse) {
     const assigned = await assignChain(user.id, topics)
     if (assigned) {
       chainIdToUse = assigned
     } else {
-      // assignChain failed — create chain manually
       const { data: chain, error: chainErr } = await supabase
         .from('chains')
         .insert({ user_id: user.id })
         .select('id')
         .single()
-      if (chainErr) return NextResponse.json({ error: chainErr.message }, { status: 500 })
-      chainIdToUse = chain.id
+      if (chainErr) {
+        console.error('[POST /api/entries] chain insert error', {
+          message: chainErr.message,
+          code: chainErr.code,
+          details: chainErr.details,
+          hint: chainErr.hint,
+        })
+      } else {
+        chainIdToUse = chain.id
+      }
     }
   }
-
-  // Upload images (Phase 5-3 noted: skip for now)
-  const imageUrls: string[] = []
 
   const { data: entry, error: entryErr } = await supabase
     .from('entries')
     .insert({
+      id: randomUUID(),
       user_id: user.id,
       chain_id: chainIdToUse,
+      title: '',
       content,
-      image_urls: imageUrls,
+      word_count: content.length,
+      image_urls: null,
       ai_status: 'pending',
-      topics,
+      topics: topics.length ? topics : [],
+      tags: [],
+      related_entry_ids: [],
     })
     .select('id, chain_id, topics')
     .single()
 
-  if (entryErr) return NextResponse.json({ error: entryErr.message }, { status: 500 })
+  if (entryErr) {
+    console.error('[POST /api/entries] insert error', {
+      message: entryErr.message,
+      code: entryErr.code,
+      details: entryErr.details,
+      hint: entryErr.hint,
+    })
+    return NextResponse.json(
+      { error: entryErr.message, code: entryErr.code, details: entryErr.details },
+      { status: 500 },
+    )
+  }
 
-  // Update chain updated_at so feed sorts correctly
   await supabase
     .from('chains')
     .update({ updated_at: new Date().toISOString() })

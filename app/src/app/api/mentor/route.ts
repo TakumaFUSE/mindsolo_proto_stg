@@ -1,7 +1,9 @@
 import { streamText, convertToModelMessages } from 'ai'
+import type { UIMessage } from 'ai'
 import { anthropic } from '@ai-sdk/anthropic'
 import { buildMentorSystemPrompt } from '@/lib/prompts/mentor'
 import { getPersonaById } from '@/lib/personas'
+import type { CustomMentor } from '@/lib/types'
 
 const DEV_BYPASS =
   process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true' ||
@@ -133,10 +135,10 @@ export async function POST(req: Request) {
       .select('system_prompt, tone, name, description')
       .eq('id', thread.mentor_id)
       .single()
-    if (mentor) systemPrompt = buildMentorSystemPrompt(mentor as any)
+    if (mentor) systemPrompt = buildMentorSystemPrompt(mentor as unknown as CustomMentor)
   }
 
-  const modelMessages = await convertToModelMessages(messages as any)
+  const modelMessages = await convertToModelMessages(messages as UIMessage[])
 
   const result = streamText({
     model: anthropic('claude-haiku-4-5-20251001'),

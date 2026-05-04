@@ -23,9 +23,9 @@ export async function POST(req: Request) {
       id: `custom-dev-${Date.now()}`,
       user_id: 'dev-user',
       name: name.trim(),
-      description: description ?? null,
+      description: description?.trim() || null,
       system_prompt: system_prompt.trim(),
-      tone: tone ?? null,
+      tone: tone?.trim() || null,
       created_at: new Date().toISOString(),
     }
 
@@ -40,18 +40,35 @@ export async function POST(req: Request) {
   } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
 
+  // description は DB で NOT NULL だった列だが 0006 で nullable 化済み。
+  // role は 0005 で DEFAULT 'mentor' + nullable になったので payload から外す。
+  const payload: Record<string, unknown> = {
+    user_id: user.id,
+    name: name.trim(),
+    system_prompt: system_prompt.trim(),
+    tone: tone?.trim() || null,
+  }
+  if (description?.trim()) {
+    payload.description = description.trim()
+  }
+
   const { data, error } = await supabase
     .from('custom_mentors')
-    .insert({
-      user_id: user.id,
-      name: name.trim(),
-      description: description ?? null,
-      system_prompt: system_prompt.trim(),
-      tone: tone ?? null,
-    })
+    .insert(payload)
     .select('id')
     .single()
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  if (error) {
+    console.error('[POST /api/mentors] insert error', {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint,
+    })
+    return NextResponse.json(
+      { error: error.message, code: error.code, details: error.details },
+      { status: 500 },
+    )
+  }
   return NextResponse.json({ id: data.id })
 }

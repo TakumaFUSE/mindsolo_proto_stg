@@ -1,7 +1,7 @@
 type Props = { imageUrls: string[] }
 
 export default function ImageCarousel({ imageUrls }: Props) {
-  if (!imageUrls.length) return null
+  if (!imageUrls?.length) return null
   return (
     <div
       className="mb-3 flex gap-2.5 overflow-x-auto pb-1"
