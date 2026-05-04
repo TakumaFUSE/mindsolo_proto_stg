@@ -159,9 +159,10 @@ NEXT_PUBLIC_DEV_BYPASS_AUTH=true
   - entries id/description: migration 0006 で `entries.id DEFAULT gen_random_uuid()` + `custom_mentors.description DROP NOT NULL`
 - 加えて: entries/mentors API ルートに構造化エラーロギング追加、lint 0 errors・build clean を確認
 - 残 Tech Debt:
-  - `user_mentors` テーブルはスキーマのみ存在・アプリから未使用（最終整理待ち）
+  - `user_mentors` テーブルは Phase 9-1 で `user_mentors_legacy_archive` にリネーム済み（DROP は Phase 9-4）
   - `mentor_conversations_legacy_archive` / `keyword_saves_legacy_archive` は 2 週間後に削除可
   - entries.chain_id が 3 件 NULL のまま（バックフィル失敗分）
+  - ※ Phase 7 で実装した topic-overlap チェーン自動グルーピング (`lib/chain.ts`) は Phase 9-2 で正規仕様（明示的ユーザー操作のみ）に修正済み
 - 次フェーズ候補: Vercel デプロイ設定 / E2E テスト整備
 - 成果物: `supabase/migrations/0005-0006`, `docs/RUNTIME_BUG_TRIAGE.md`, `docs/MENTOR_AUDIT.md`, `app/src/components/mentor/StartConversationButton.tsx`
 
