@@ -38,7 +38,7 @@ export async function getFeedItems(
       .limit(50),
     supabase
       .from('mentor_threads')
-      .select('id, user_id, chain_id, mentor_id, title, created_at, updated_at, user_mentors(name)')
+      .select('id, user_id, chain_id, mentor_id, title, created_at, updated_at, custom_mentors(name)')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(50),
@@ -59,8 +59,7 @@ export async function getFeedItems(
     ...t,
     kind: 'thread' as const,
     mentor_name:
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ((t.user_mentors as any)?.name as string | undefined) ?? '不明なメンター',
+      (t.custom_mentors as unknown as { name: string } | null)?.name ?? '不明なメンター',
   }))
 
   return {
