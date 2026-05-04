@@ -123,7 +123,12 @@ The script:
 本番 DB で全画面動作確認（Phase 9-1〜9-3）完了後、以下を実施:
 
 - バックアップ: `.backups/legacy_archives_20260504_211022.sql`（61 KB、3 テーブル分）
-- 件数確認: `docs/legacy_archive_final_counts.sql` を実行して結果を保管
+- 件数確認: `docs/legacy_archive_final_counts.sql` を実行 — 結果:
+  | テーブル | 行数 |
+  |---------|------|
+  | keyword_saves_legacy_archive | 135 |
+  | mentor_conversations_legacy_archive | 14 |
+  | user_mentors_legacy_archive | 0 |
 - migration `0009_drop_legacy_archives.sql` を `supabase db push` で適用
 
 削除済みテーブル:
