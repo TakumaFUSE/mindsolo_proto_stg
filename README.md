@@ -1,6 +1,6 @@
-# editlife
+# editlife (Mindsolo)
 
-> Phase 0–7 complete — prototype ready for review.
+> Phase 0–8 complete — production bugs fixed, lint clean, ready for deploy.
 
 日々の出来事・感情・思考・興味関心を記録し、AI が解釈・接続・振り返り・次の行動提案へつなげる、**自己理解と探索のためのパーソナルストックツール**。
 
@@ -72,13 +72,21 @@ npm run lint    # ESLint（エラー 0 が基準）
 ## Supabase セットアップ（本番接続時）
 
 ```bash
-# マイグレーションを順に適用
+# Supabase CLI でリンクしてから全 migration を一括適用
+supabase link --project-ref <your-project-ref>
 supabase db push
-# または psql で直接実行
-psql $DATABASE_URL -f supabase/migrations/0001_init.sql
-psql $DATABASE_URL -f supabase/migrations/0002_mentor.sql
-psql $DATABASE_URL -f supabase/migrations/0003_topics_chain.sql
-psql $DATABASE_URL -f supabase/migrations/0004_discover_cache.sql
+```
+
+現在の migration スタック（適用順）:
+
+```
+0000_legacy_reconcile   journal_entries → entries リネーム + カラム追加
+0001_init               新規テーブル全作成 (chains / mentor_threads / etc.)
+0002_mentor             custom_mentors + persona columns + legacy data migration
+0003_topics_chain       entries.topics column + index
+0004_discover_cache     discover_cache table
+0005_bug_fixes          mentor_threads.chain_id DROP NOT NULL / custom_mentors.role DEFAULT
+0006_schema_fixes       entries.id DEFAULT gen_random_uuid() / description DROP NOT NULL
 ```
 
 ---

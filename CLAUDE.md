@@ -148,6 +148,23 @@ NEXT_PUBLIC_DEV_BYPASS_AUTH=true
 - 次フェーズ: Phase 8 で実データバグ修正と締め (lint/build/README) を実施
 - 成果物: `supabase/migrations/0000-0004`, `app/scripts/backfill-existing-entries.ts`, `docs/MIGRATION_PLAN.md`, `app/src/app/(auth)/login/page.tsx`
 
+### Phase 8 (bug-fix-and-polish) — 2026-05-04
+- 達成: 本番 DB 監査 SQL (MENTOR_AUDIT.md) + バグトリアージ (RUNTIME_BUG_TRIAGE.md) 作成。確認された全7バグを修正
+  - A: ImageCarousel null crash → `imageUrls?.length`
+  - C-1: getThreads/getThread で mentor_name/avatar を PERSONAS + custom_mentors バッチ JOIN で解決
+  - C-2: StartConversationButton (カスタムメンターから会話開始) 追加
+  - C-3a: migration 0005 で `mentor_threads.chain_id` DROP NOT NULL
+  - C-3b: migration 0005 で `mentor_threads.mentor_id` FK を `user_mentors` → `custom_mentors` に付け替え
+  - C-4: migration 0005 で `custom_mentors.role` DEFAULT 'mentor' + DROP NOT NULL
+  - entries id/description: migration 0006 で `entries.id DEFAULT gen_random_uuid()` + `custom_mentors.description DROP NOT NULL`
+- 加えて: entries/mentors API ルートに構造化エラーロギング追加、lint 0 errors・build clean を確認
+- 残 Tech Debt:
+  - `user_mentors` テーブルはスキーマのみ存在・アプリから未使用（最終整理待ち）
+  - `mentor_conversations_legacy_archive` / `keyword_saves_legacy_archive` は 2 週間後に削除可
+  - entries.chain_id が 3 件 NULL のまま（バックフィル失敗分）
+- 次フェーズ候補: Vercel デプロイ設定 / E2E テスト整備
+- 成果物: `supabase/migrations/0005-0006`, `docs/RUNTIME_BUG_TRIAGE.md`, `docs/MENTOR_AUDIT.md`, `app/src/components/mentor/StartConversationButton.tsx`
+
 ---
 
 ## フェーズ運用ルール
