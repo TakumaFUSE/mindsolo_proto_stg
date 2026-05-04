@@ -118,14 +118,22 @@ The script:
 
 ## 5. Archive table cleanup
 
-After the new app has been running without issues for **2 weeks**, the legacy archive tables may be dropped:
+**Phase 9-4 (2026-05-04) — 実施済み**
 
-```sql
-DROP TABLE IF EXISTS keyword_saves_legacy_archive;
-DROP TABLE IF EXISTS mentor_conversations_legacy_archive;
-```
+本番 DB で全画面動作確認（Phase 9-1〜9-3）完了後、以下を実施:
 
-Do not drop them earlier — they are the primary rollback path.
+- バックアップ: `.backups/legacy_archives_20260504_211022.sql`（61 KB、3 テーブル分）
+- 件数確認: `docs/legacy_archive_final_counts.sql` を実行して結果を保管
+- migration `0009_drop_legacy_archives.sql` を `supabase db push` で適用
+
+削除済みテーブル:
+
+| テーブル | 備考 |
+|---------|------|
+| `keyword_saves_legacy_archive` | 0000 でリネーム後、新アプリから未使用 |
+| `mentor_conversations_legacy_archive` | 0000 でリネーム後、0002 で `mentor_threads` / `mentor_messages` に移行済み |
+| `user_mentors_legacy_archive` | 0007 でリネーム後、`custom_mentors` に統合済み |
+| `journal_entries_legacy_archive` | 存在した場合の保険 DROP（0000 で `entries` にリネーム済み） |
 
 ---
 

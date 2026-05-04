@@ -191,6 +191,13 @@ Chain はユーザーの明示的操作のみで形成される。詳細は上�
 - 達成: `entries` の死カラム削除 (`art_url`, `framework_id`) — migration 0008 適用
 - 成果物: `supabase/migrations/0008_drop_legacy_columns.sql`
 
+### Phase 9-4 — 2026-05-04
+- 達成: legacy archive テーブル群の最終 DROP — migration 0009 適用
+  - バックアップ: `.backups/legacy_archives_20260504_211022.sql` (61 KB)
+  - 件数確認 SQL: `docs/legacy_archive_final_counts.sql`
+  - 削除: `keyword_saves_legacy_archive`, `mentor_conversations_legacy_archive`, `user_mentors_legacy_archive`, `journal_entries_legacy_archive`
+- 成果物: `supabase/migrations/0009_drop_legacy_archives.sql`, `docs/legacy_archive_final_counts.sql`
+
 ---
 
 ## Tech Debt
@@ -200,12 +207,9 @@ Chain はユーザーの明示的操作のみで形成される。詳細は上�
 - ✓ user_mentors 廃止 → user_mentors_legacy_archive にリネーム (0007)
 - ✓ Chain 仕様を「明示的アクション継承型」に修正 (Phase 9-2)
 - ✓ entries の死カラム削除: art_url, framework_id (0008)
+- ✓ _legacy_archive 系テーブルの最終 DROP (0009): keyword_saves / mentor_conversations / user_mentors / journal_entries
 
 ### 未対応 (継続)
-- `_legacy_archive` 系テーブルの DROP (Phase 9-4 で実施予定):
-    - `keyword_saves_legacy_archive`
-    - `mentor_conversations_legacy_archive`
-    - `user_mentors_legacy_archive`
 - backfill script の OFFSET ページングバグ: chain ロジック刷新後は当面触る機会なし。再利用時に修正
 - `/feed` 検索・絞り込み・並び替えの実装 (UI のみ確定済み)
 - `reflection_suggestions` 生成ロジックの実装
