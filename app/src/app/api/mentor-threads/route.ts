@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { PERSONAS, getPersonaById } from '@/lib/personas'
+import { getPersonaById } from '@/lib/personas'
 
 const DEV_BYPASS =
   process.env.NEXT_PUBLIC_DEV_BYPASS_AUTH === 'true' ||

@@ -142,6 +142,12 @@ NEXT_PUBLIC_DEV_BYPASS_AUTH=true
 - discover 画面: 6カテゴリ（商品/場所/体験/美術/音楽/海外旅行）× 8キュレーションアイテム (48件) のフィクスチャ。CategoryRail / ItemCard / ReasonBlock / AffiliateButton で detail まで実装。Phase 7 で AI 連携予定
 - 成果物: `app/src/lib/personas.ts`, `lib/prompts/mentor.ts`, `lib/discover.ts`, `lib/mocks/mentor-fixtures.ts`, `lib/mocks/discover-fixtures.ts`, `app/src/components/mentor/`, `app/src/components/discover/`, `app/src/app/(app)/mentor/`, `app/src/app/(app)/discover/`, `app/src/app/api/mentor/`, `supabase/migrations/0002_mentor.sql`
 
+### Phase 7 (wiring) — 2026-05-04
+- 達成: legacy データ移行 (125 件), chain_id 採番 (122/122), AI 生成パイプライン, discover パーソナライズ, setting 画面シェル, login 実認証接続
+- 未完: 本番モードで複数バグ発覚 (entry/[id] runtime error, entries INSERT 500, mentor 系の参照ミスマッチ等)。lint/build/README は Phase 8 の締め作業に意図的に先送り
+- 次フェーズ: Phase 8 で実データバグ修正と締め (lint/build/README) を実施
+- 成果物: `supabase/migrations/0000-0004`, `app/scripts/backfill-existing-entries.ts`, `docs/MIGRATION_PLAN.md`, `app/src/app/(auth)/login/page.tsx`
+
 ---
 
 ## フェーズ運用ルール
