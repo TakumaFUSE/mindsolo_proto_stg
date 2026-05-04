@@ -2,9 +2,35 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
   const router = useRouter()
+  const [email, setEmail]       = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError]       = useState<string | null>(null)
+  const [loading, setLoading]   = useState(false)
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError(null)
+    setLoading(true)
+    try {
+      const supabase = createClient()
+      const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
+      if (authError) {
+        setError(authError.message)
+        return
+      }
+      router.refresh()
+      router.push('/feed')
+    } catch (err) {
+      setError((err as Error).message ?? '不明なエラーが発生しました')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <>
@@ -33,32 +59,49 @@ export default function LoginPage() {
       </div>
 
       {/* Login form */}
-      <form
-        onSubmit={e => {
-          e.preventDefault()
-          router.push('/feed')
-        }}
-      >
+      <form onSubmit={handleSubmit}>
         <label className="mb-2.5 block">
           <span className="mb-1.5 block text-[0.81rem] font-semibold text-muted">
             メールアドレス
           </span>
-          <input type="email" placeholder="you@example.com" autoComplete="email" />
+          <input
+            type="email"
+            placeholder="you@example.com"
+            autoComplete="email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
+          />
         </label>
         <label className="mb-3 block">
           <span className="mb-1.5 block text-[0.81rem] font-semibold text-muted">パスワード</span>
-          <input type="password" placeholder="••••••••" autoComplete="current-password" />
+          <input
+            type="password"
+            placeholder="6文字以上"
+            autoComplete="current-password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+          />
         </label>
+
+        {error && (
+          <p className="mb-3 rounded-lg bg-[#fff0eb] px-3 py-2 text-[0.83rem] text-danger">
+            {error}
+          </p>
+        )}
+
         <button
           type="submit"
-          className="w-full rounded-xl py-2.5 text-[0.94rem] font-bold text-white"
+          disabled={loading}
+          className="w-full rounded-xl py-2.5 text-[0.94rem] font-bold text-white disabled:opacity-60"
           style={{
             background: 'linear-gradient(180deg, #ef7a4a 0%, #e56033 100%)',
             border: '1px solid #df5d2f',
             boxShadow: '0 8px 17px rgba(221, 95, 50, 0.27)',
           }}
         >
-          ログイン
+          {loading ? 'ログイン中…' : 'ログイン'}
         </button>
       </form>
 
