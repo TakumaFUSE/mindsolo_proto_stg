@@ -12,6 +12,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 実装は最終的に `app/` (Next.js 16, App Router) に作る
 - 各フェーズの成果は `docs/SPEC.md`, `docs/DATA_MODEL.md`, `docs/IMPL_PLAN.md` に蓄積する
 
+## Chain 仕様（重要・自動グルーピングしない）
+
+- Chain は「+」ボタンや「詳細」ボタンなど **ユーザーの明示的アクション** で親 `chain_id` を継承して形成される
+- topics の類似性で自動的に chain にぶら下げる処理は行わない（旧 Phase 7 で実装した `assignChain` は誤実装、Phase 9-2 で訂正済み）
+- 起源なし（BottomNav の「+」から `/entry/write` に直接到達）の場合は `randomUUID()` で新規 `chain_id` を採番
+- chain 内の表示順序は `created_at` 昇順
+- 詳細仕様は `docs/SPEC.md` §3.5・§4.2 の Chain 章を参照
+
 ## Repository Layout
 
 ```
@@ -88,6 +96,10 @@ NEXT_PUBLIC_DEV_BYPASS_AUTH=true
 2. **Vercel AI SDK** (`ai` + `@ai-sdk/anthropic`) — メンターチャットのストリーミング（`streamText()`）
 
 全 AI ルートで `claude-haiku-4-5-20251001` を使用（コスト効率優先）。
+
+### Chain 形成ルール
+
+Chain はユーザーの明示的操作のみで形成される。詳細は上の **「## Chain 仕様」** セクションを参照。
 
 ### TypeScript パスエイリアス
 
